@@ -1,0 +1,3177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriHelp — Smart Agriculture Marketplace</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+/* ═══════════════════════════ DESIGN TOKENS ═══════════════════════════ */
+    :root {
+      --g900: #020b14;
+      --g800: #051424;
+      --g700: #092138;
+      --g600: #0c3050;
+      --g500: #059669;
+      --g400: #10b981;
+      --g300: #34d399;
+      --g200: #6ee7b7;
+      --g100: #a7f3d0;
+      --g50: #d1fae5;
+      --amber: #e8a020;
+      --amber-l: #f5c35a;
+      --amber-pale: #fdf3d8;
+      --red: #e53e3e;
+      --blue: #2563eb;
+      --blue-l: #60a5fa;
+      --cream: #f8fafc;
+      --ink: #020617;
+      --shadow-xs: 0 1px 4px rgba(0, 0, 0, .12);
+      --shadow-sm: 0 2px 10px rgba(0, 0, 0, .15);
+      --shadow-md: 0 6px 28px rgba(0, 0, 0, .2);
+      --shadow-lg: 0 16px 56px rgba(0, 0, 0, .28);
+      --r-sm: 8px;
+      --r-md: 14px;
+      --r-lg: 20px;
+      --r-xl: 28px;
+      --tr: .22s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--g900);
+      color: var(--cream);
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--g800);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--g500);
+      border-radius: 3px;
+    }
+
+    button {
+      font-family: 'Sora', sans-serif;
+      cursor: pointer;
+      border: none;
+      outline: none;
+    }
+
+    input,
+    select,
+    textarea {
+      font-family: 'Sora', sans-serif;
+      outline: none;
+    }
+
+    /* ═══════════════════════════ SCREENS ═══════════════════════════ */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      z-index: 100;
+      transition: opacity .4s ease, transform .4s ease;
+    }
+
+    .screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(.97);
+    }
+
+    /* ═══════════════════════════ AUTH CARD ═══════════════════════════ */
+    .auth-wrap {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      max-width: 900px;
+      width: 95%;
+      background: transparent;
+      min-height: 540px;
+    }
+
+    .auth-brand {
+      padding: 3rem;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-right: 1px solid rgba(16, 185, 129, .12);
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2.5rem;
+    }
+
+    .auth-logo .leaf {
+      font-size: 1.8rem;
+    }
+
+    .auth-logo h1 {
+      font-family: 'Fraunces', serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--amber-l);
+    }
+
+    .auth-logo h1 span {
+      color: var(--g300);
+    }
+
+    .auth-brand h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.7rem;
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--cream);
+      margin-bottom: .9rem;
+    }
+
+    .auth-brand h2 em {
+      font-style: italic;
+      color: var(--amber-l);
+    }
+
+    .auth-brand p {
+      font-size: .82rem;
+      color: rgba(148, 163, 184, .6);
+      line-height: 1.75;
+      margin-bottom: 2rem;
+    }
+
+    .brand-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
+    .brand-pill {
+      background: rgba(5, 150, 105, .15);
+      border: 1px solid rgba(5, 150, 105, .3);
+      color: var(--g300);
+      font-size: .7rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 50px;
+    }
+
+    .auth-form-wrap {
+      padding: 2.5rem;
+    }
+
+    .role-tabs {
+      display: flex;
+      background: rgba(2, 11, 20, .3);
+      border: 1px solid rgba(16, 185, 129, .15);
+      border-radius: 50px;
+      padding: 4px;
+      margin-bottom: 1.8rem;
+    }
+
+    .role-tab {
+      flex: 1;
+      padding: 9px;
+      border-radius: 50px;
+      background: transparent;
+      color: rgba(148, 163, 184, .5);
+      font-size: .82rem;
+      font-weight: 600;
+      transition: var(--tr);
+    }
+
+    .role-tab.active {
+      background: linear-gradient(135deg, var(--g700), var(--g600));
+      color: var(--cream);
+    }
+
+    .auth-tab-btns {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.6rem;
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 50px;
+      background: transparent;
+      border: 1px solid rgba(16, 185, 129, .15);
+      color: rgba(148, 163, 184, .5);
+      font-size: .8rem;
+      font-weight: 600;
+      transition: var(--tr);
+    }
+
+    .auth-tab-btn.active {
+      border-color: rgba(16, 185, 129, .4);
+      color: var(--g300);
+    }
+
+    .auth-panel {
+      display: none;
+    }
+
+    .auth-panel.active {
+      display: block;
+      animation: panelIn .25s ease;
+    }
+
+    @keyframes panelIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--cream);
+      margin-bottom: .3rem;
+    }
+
+    .form-sub {
+      font-size: .78rem;
+      color: rgba(148, 163, 184, .5);
+      margin-bottom: 1.4rem;
+    }
+
+    .fg {
+      margin-bottom: .9rem;
+    }
+
+    .fg label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--g200);
+      letter-spacing: .05em;
+      margin-bottom: 5px;
+    }
+
+    .fi {
+      position: relative;
+    }
+
+    .fi-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: .9rem;
+      pointer-events: none;
+    }
+
+    .fi input,
+    .fi select {
+      width: 100%;
+      padding: 10px 12px 10px 35px;
+      background: rgba(2, 11, 20, .3);
+      border: 1px solid rgba(16, 185, 129, .18);
+      border-radius: var(--r-sm);
+      color: var(--cream);
+      font-size: .85rem;
+      transition: var(--tr);
+    }
+
+    .fi input::placeholder {
+      color: rgba(94, 136, 163, .5);
+    }
+
+    .fi input:focus,
+    .fi select:focus {
+      border-color: rgba(16, 185, 129, .5);
+      background: rgba(5, 20, 36, .6);
+    }
+
+    .fi select option {
+      background: var(--g800);
+    }
+
+    .auth-submit {
+      width: 100%;
+      padding: 12px;
+      margin-top: .4rem;
+      background: linear-gradient(135deg, var(--amber-l), var(--amber));
+      border-radius: var(--r-sm);
+      color: var(--g900);
+      font-size: .9rem;
+      font-weight: 700;
+      transition: var(--tr);
+    }
+
+    .auth-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(232, 160, 32, .4);
+    }
+
+    .auth-note {
+      text-align: center;
+      font-size: .74rem;
+      color: rgba(148, 163, 184, .4);
+      margin-top: .9rem;
+    }
+
+    .auth-note a {
+      color: var(--g300);
+      cursor: pointer;
+    }
+
+    /* ═══════════════════════════ APP SHELL ═══════════════════════════ */
+    #app {
+      display: none;
+      position: fixed;
+      inset: 0;
+      flex-direction: column;
+    }
+
+    #app.active {
+      display: flex;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      height: 58px;
+      display: flex;
+      align-items: center;
+      padding: 0 1.2rem;
+      background: rgba(2, 11, 20, .96);
+      border-bottom: 1px solid rgba(16, 185, 129, .15);
+      backdrop-filter: blur(16px);
+      z-index: 500;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+
+    .tb-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .tb-logo span {
+      font-family: 'Fraunces', serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--amber-l);
+    }
+
+    .tb-logo small {
+      color: var(--g300);
+    }
+
+    .tb-role-badge {
+      background: rgba(5, 150, 105, .2);
+      border: 1px solid rgba(5, 150, 105, .35);
+      color: var(--g300);
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 3px 10px;
+      border-radius: 50px;
+    }
+
+    .tb-role-badge.buyer {
+      background: rgba(37, 99, 235, .15);
+      border-color: rgba(37, 99, 235, .3);
+      color: var(--blue-l);
+    }
+
+    .tb-spacer {
+      flex: 1;
+    }
+
+    .tb-user {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .tb-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--g600), var(--g400));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .9rem;
+      border: 2px solid rgba(16, 185, 129, .3);
+    }
+
+    .tb-name {
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--cream);
+    }
+
+    .tb-btn {
+      padding: 7px 14px;
+      border-radius: 50px;
+      border: 1px solid rgba(16, 185, 129, .2);
+      background: transparent;
+      color: rgba(148, 163, 184, .6);
+      font-size: .75rem;
+      font-weight: 600;
+      transition: var(--tr);
+    }
+
+    .tb-btn:hover {
+      background: rgba(16, 185, 129, .1);
+      color: var(--g300);
+    }
+
+    .tb-notify {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(5, 20, 36, .8);
+      border: 1px solid rgba(16, 185, 129, .15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--red);
+      font-size: .55rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--g900);
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 340px;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      background: rgba(2, 11, 20, .97);
+      border-right: 1px solid rgba(16, 185, 129, .12);
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: width .3s ease;
+    }
+
+    .sidebar.collapsed {
+      width: 0;
+      min-width: 0;
+    }
+
+    .sb-section {
+      padding: 1rem 1rem .5rem;
+      border-bottom: 1px solid rgba(16, 185, 129, .08);
+    }
+
+    .sb-section-title {
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(148, 163, 184, .35);
+      margin-bottom: .8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sb-section-title span {
+      font-size: .7rem;
+      color: var(--g300);
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: none;
+      cursor: pointer;
+    }
+
+    /* Filters */
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .5rem;
+      margin-bottom: .6rem;
+    }
+
+    .f-select {
+      width: 100%;
+      padding: 8px 10px;
+      background: rgba(5, 20, 36, .8);
+      border: 1px solid rgba(16, 185, 129, .18);
+      border-radius: var(--r-sm);
+      color: var(--cream);
+      font-size: .78rem;
+      font-family: 'Sora', sans-serif;
+    }
+
+    .f-select option {
+      background: var(--g800);
+    }
+
+    .f-range-wrap {
+      margin-bottom: .6rem;
+    }
+
+    .f-range-wrap label {
+      font-size: .72rem;
+      color: var(--g200);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .f-range {
+      width: 100%;
+      accent-color: var(--g400);
+    }
+
+    .apply-btn {
+      width: 100%;
+      padding: 9px;
+      background: rgba(5, 150, 105, .2);
+      border: 1px solid rgba(5, 150, 105, .35);
+      color: var(--g300);
+      border-radius: var(--r-sm);
+      font-size: .8rem;
+      font-weight: 600;
+      transition: var(--tr);
+    }
+
+    .apply-btn:hover {
+      background: rgba(5, 150, 105, .35);
+    }
+
+    /* Buyer list */
+    .buyer-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: .5rem;
+    }
+
+    .buyer-card {
+      background: linear-gradient(145deg, rgba(5, 20, 36, .7), rgba(2, 11, 20, .85));
+      border: 1px solid rgba(16, 185, 129, .12);
+      border-radius: var(--r-md);
+      padding: .9rem;
+      margin-bottom: .6rem;
+      cursor: pointer;
+      transition: var(--tr);
+    }
+
+    .buyer-card:hover,
+    .buyer-card.active {
+      border-color: rgba(16, 185, 129, .4);
+      background: rgba(9, 33, 56, .5);
+    }
+
+    .buyer-card.active {
+      border-color: var(--g400);
+    }
+
+    .bc-head {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      margin-bottom: .6rem;
+    }
+
+    .bc-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .9rem;
+      flex-shrink: 0;
+    }
+
+    .bc-name {
+      font-weight: 600;
+      font-size: .88rem;
+      color: var(--cream);
+    }
+
+    .bc-dist {
+      font-size: .7rem;
+      color: var(--g300);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .bc-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      margin-bottom: .5rem;
+    }
+
+    .bc-chip {
+      font-size: .66rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 50px;
+    }
+
+    .chip-product {
+      background: rgba(5, 150, 105, .18);
+      border: 1px solid rgba(5, 150, 105, .28);
+      color: var(--g300);
+    }
+
+    .chip-price {
+      background: rgba(232, 160, 32, .12);
+      border: 1px solid rgba(232, 160, 32, .25);
+      color: var(--amber-l);
+    }
+
+    .chip-qty {
+      background: rgba(37, 99, 235, .1);
+      border: 1px solid rgba(37, 99, 235, .22);
+      color: var(--blue-l);
+    }
+
+    .bc-footer {
+      display: flex;
+      gap: .4rem;
+    }
+
+    .bc-action {
+      flex: 1;
+      padding: 6px;
+      border-radius: var(--r-sm);
+      font-size: .72rem;
+      font-weight: 600;
+      transition: var(--tr);
+    }
+
+    .bc-contact {
+      background: rgba(5, 150, 105, .2);
+      border: 1px solid rgba(5, 150, 105, .3);
+      color: var(--g300);
+    }
+
+    .bc-contact:hover {
+      background: rgba(5, 150, 105, .35);
+    }
+
+    .bc-view {
+      background: rgba(232, 160, 32, .12);
+      border: 1px solid rgba(232, 160, 32, .25);
+      color: var(--amber-l);
+    }
+
+    .bc-view:hover {
+      background: rgba(232, 160, 32, .22);
+    }
+
+    /* ── MAP AREA ── */
+    .map-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #061626;
+    }
+
+    /* Map controls */
+    .map-controls {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      z-index: 10;
+    }
+
+    .mc-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(2, 11, 20, .92);
+      border: 1px solid rgba(16, 185, 129, .2);
+      color: var(--g300);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--tr);
+    }
+
+    .mc-btn:hover {
+      background: rgba(9, 33, 56, .9);
+      border-color: rgba(16, 185, 129, .45);
+    }
+
+    .map-legend {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      background: rgba(2, 11, 20, .9);
+      border: 1px solid rgba(16, 185, 129, .2);
+      border-radius: var(--r-md);
+      padding: .8rem 1rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .72rem;
+      color: rgba(148, 163, 184, .6);
+      margin-bottom: .3rem;
+    }
+
+    .legend-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .leg-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .my-location-btn {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      padding: 10px 18px;
+      background: rgba(2, 11, 20, .92);
+      border: 1px solid rgba(16, 185, 129, .3);
+      border-radius: 50px;
+      color: var(--g300);
+      font-size: .78rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--tr);
+    }
+
+    .my-location-btn:hover {
+      background: rgba(9, 33, 56, .9);
+    }
+
+    /* ── BUYER DETAIL PANEL ── */
+    .detail-panel {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      width: 300px;
+      background: rgba(2, 11, 20, .96);
+      border: 1px solid rgba(16, 185, 129, .3);
+      border-radius: var(--r-lg);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-lg);
+      transform: translateX(-120%);
+      transition: transform .35s cubic-bezier(.4, 0, .2, 1);
+      z-index: 20;
+      overflow: hidden;
+    }
+
+    .detail-panel.open {
+      transform: translateX(0);
+    }
+
+    .dp-header {
+      padding: 1rem 1rem .7rem;
+      background: linear-gradient(135deg, rgba(9, 33, 56, .6), rgba(5, 20, 36, .8));
+      border-bottom: 1px solid rgba(16, 185, 129, .12);
+    }
+
+    .dp-close {
+      position: absolute;
+      top: .8rem;
+      right: .8rem;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, .1);
+      border: 1px solid rgba(16, 185, 129, .2);
+      color: rgba(148, 163, 184, .5);
+      font-size: .85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dp-close:hover {
+      background: rgba(16, 185, 129, .25);
+      color: var(--cream);
+    }
+
+    .dp-avatar-row {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      margin-bottom: .3rem;
+    }
+
+    .dp-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      border: 2px solid rgba(37, 99, 235, .4);
+    }
+
+    .dp-name {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--cream);
+    }
+
+    .dp-type {
+      font-size: .72rem;
+      color: rgba(148, 163, 184, .5);
+    }
+
+    .dp-dist-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(5, 150, 105, .18);
+      border: 1px solid rgba(5, 150, 105, .3);
+      color: var(--g300);
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 50px;
+      margin-top: .4rem;
+    }
+
+    .dp-body {
+      padding: 1rem;
+    }
+
+    .dp-rows {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      margin-bottom: 1rem;
+    }
+
+    .dp-row {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .55rem .7rem;
+      background: rgba(5, 20, 36, .6);
+      border: 1px solid rgba(16, 185, 129, .1);
+      border-radius: var(--r-sm);
+    }
+
+    .dp-row-icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      width: 22px;
+      text-align: center;
+    }
+
+    .dp-row-label {
+      font-size: .68rem;
+      color: rgba(148, 163, 184, .45);
+      flex-shrink: 0;
+      width: 65px;
+    }
+
+    .dp-row-val {
+      font-size: .83rem;
+      font-weight: 600;
+      color: var(--cream);
+      margin-left: auto;
+    }
+
+    .dp-actions {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+
+    .dp-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: var(--r-sm);
+      font-size: .82rem;
+      font-weight: 700;
+      transition: var(--tr);
+    }
+
+    .dp-btn-primary {
+      background: linear-gradient(135deg, var(--g500), var(--g400));
+      color: var(--cream);
+    }
+
+    .dp-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(5, 150, 105, .4);
+    }
+
+    .dp-btn-secondary {
+      background: rgba(37, 99, 235, .12);
+      border: 1px solid rgba(37, 99, 235, .25);
+      color: var(--blue-l);
+    }
+
+    .dp-btn-secondary:hover {
+      background: rgba(37, 99, 235, .22);
+    }
+
+    .dp-rating {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .5rem .7rem;
+      background: rgba(5, 20, 36, .6);
+      border: 1px solid rgba(232, 160, 32, .15);
+      border-radius: var(--r-sm);
+      margin-bottom: .5rem;
+    }
+
+    .dp-stars {
+      color: var(--amber-l);
+      font-size: .9rem;
+    }
+
+    .dp-rating-text {
+      font-size: .73rem;
+      color: rgba(148, 163, 184, .5);
+    }
+
+    /* ── BUYER DASHBOARD ── */
+    .buyer-dash {
+      position: fixed;
+      inset: 58px 0 0;
+      background: rgba(6, 12, 8, .98);
+      z-index: 400;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .buyer-dash.active {
+      display: flex;
+    }
+
+    .dash-header {
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid rgba(16, 185, 129, .12);
+    }
+
+    .dash-header h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cream);
+    }
+
+    .dash-header p {
+      font-size: .8rem;
+      color: rgba(148, 163, 184, .45);
+      margin-top: 2px;
+    }
+
+    .dash-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.2rem 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+      align-content: start;
+    }
+
+    .stat-card {
+      background: linear-gradient(145deg, rgba(5, 20, 36, .7), rgba(2, 11, 20, .85));
+      border: 1px solid rgba(16, 185, 129, .15);
+      border-radius: var(--r-lg);
+      padding: 1.2rem;
+    }
+
+    .stat-icon {
+      font-size: 1.6rem;
+      margin-bottom: .7rem;
+    }
+
+    .stat-num {
+      font-family: 'Fraunces', serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--amber-l);
+    }
+
+    .stat-label {
+      font-size: .75rem;
+      color: rgba(148, 163, 184, .45);
+      margin-top: 2px;
+    }
+
+    .post-form-card {
+      background: linear-gradient(145deg, rgba(5, 20, 36, .7), rgba(2, 11, 20, .9));
+      border: 1px solid rgba(16, 185, 129, .2);
+      border-radius: var(--r-lg);
+      padding: 1.4rem;
+      grid-column: span 2;
+    }
+
+    .post-form-card h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem;
+      color: var(--cream);
+      margin-bottom: 1.2rem;
+    }
+
+    .pf-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .8rem;
+    }
+
+    .pf-field label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--g200);
+      margin-bottom: 4px;
+    }
+
+    .pf-field input,
+    .pf-field select {
+      width: 100%;
+      padding: 9px 12px;
+      background: rgba(2, 11, 20, .8);
+      border: 1px solid rgba(16, 185, 129, .2);
+      border-radius: var(--r-sm);
+      color: var(--cream);
+      font-size: .83rem;
+      font-family: 'Sora', sans-serif;
+    }
+
+    .pf-field input:focus,
+    .pf-field select:focus {
+      border-color: rgba(16, 185, 129, .45);
+    }
+
+    .pf-field input::placeholder {
+      color: rgba(94, 136, 163, .4);
+    }
+
+    .pf-field select option {
+      background: var(--g800);
+    }
+
+    .post-btn {
+      margin-top: 1rem;
+      padding: 11px 24px;
+      background: linear-gradient(135deg, var(--amber-l), var(--amber));
+      border-radius: var(--r-sm);
+      color: var(--g900);
+      font-size: .88rem;
+      font-weight: 700;
+      transition: var(--tr);
+    }
+
+    .post-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(232, 160, 32, .4);
+    }
+
+    .posted-list {
+      grid-column: span 2;
+    }
+
+    .posted-list h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.05rem;
+      color: var(--cream);
+      margin-bottom: .8rem;
+    }
+
+    .posted-item {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      padding: .8rem;
+      background: rgba(5, 20, 36, .6);
+      border: 1px solid rgba(16, 185, 129, .12);
+      border-radius: var(--r-md);
+      margin-bottom: .6rem;
+    }
+
+    .pi-emoji {
+      font-size: 1.3rem;
+    }
+
+    .pi-info {
+      flex: 1;
+    }
+
+    .pi-title {
+      font-weight: 600;
+      font-size: .88rem;
+      color: var(--cream);
+    }
+
+    .pi-meta {
+      font-size: .72rem;
+      color: rgba(148, 163, 184, .45);
+      margin-top: 2px;
+    }
+
+    .pi-badge {
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 50px;
+      background: rgba(5, 150, 105, .15);
+      border: 1px solid rgba(5, 150, 105, .28);
+      color: var(--g300);
+    }
+
+    .pi-del {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(229, 62, 62, .08);
+      border: 1px solid rgba(229, 62, 62, .2);
+      color: #e05555;
+      font-size: .8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── NOTIFICATIONS PANEL ── */
+    .notif-panel {
+      position: fixed;
+      top: 58px;
+      right: 0;
+      width: 300px;
+      background: rgba(6, 12, 8, .98);
+      border-left: 1px solid rgba(16, 185, 129, .15);
+      transform: translateX(100%);
+      transition: transform .3s ease;
+      z-index: 600;
+      height: calc(100vh - 58px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notif-panel.open {
+      transform: translateX(0);
+    }
+
+    .np-head {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(16, 185, 129, .1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .np-head h4 {
+      font-family: 'Fraunces', serif;
+      font-size: 1rem;
+      color: var(--cream);
+    }
+
+    .np-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, .08);
+      border: 1px solid rgba(16, 185, 129, .15);
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    .notif-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: .6rem;
+    }
+
+    .notif-item {
+      padding: .75rem;
+      background: rgba(5, 20, 36, .6);
+      border: 1px solid rgba(16, 185, 129, .1);
+      border-radius: var(--r-md);
+      margin-bottom: .5rem;
+      display: flex;
+      gap: .7rem;
+      align-items: flex-start;
+    }
+
+    .notif-icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .notif-text {
+      font-size: .78rem;
+      color: var(--cream);
+      line-height: 1.5;
+    }
+
+    .notif-time {
+      font-size: .67rem;
+      color: rgba(148, 163, 184, .35);
+      margin-top: 2px;
+    }
+
+    .notif-item.unread {
+      border-color: rgba(16, 185, 129, .28);
+      background: rgba(9, 33, 56, .35);
+    }
+
+    /* ── CHAT MODAL ── */
+    .chat-modal {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      width: 320px;
+      background: rgba(6, 12, 8, .98);
+      border: 1px solid rgba(16, 185, 129, .25);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-lg);
+      z-index: 700;
+      transform: translateY(20px) scale(.97);
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--tr);
+    }
+
+    .chat-modal.open {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .chat-head {
+      padding: .9rem 1rem;
+      background: linear-gradient(135deg, rgba(9, 33, 56, .7), rgba(5, 20, 36, .9));
+      border-bottom: 1px solid rgba(16, 185, 129, .12);
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-head-info {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .chat-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+    }
+
+    .chat-name {
+      font-weight: 600;
+      font-size: .85rem;
+      color: var(--cream);
+    }
+
+    .chat-status {
+      font-size: .67rem;
+      color: var(--g300);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .chat-status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--g400);
+      display: inline-block;
+    }
+
+    .chat-close-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, .08);
+      border: 1px solid rgba(16, 185, 129, .15);
+      color: rgba(148, 163, 184, .5);
+      font-size: .8rem;
+    }
+
+    .chat-messages {
+      height: 200px;
+      overflow-y: auto;
+      padding: .8rem;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+
+    .msg {
+      max-width: 75%;
+      padding: 7px 10px;
+      border-radius: 10px;
+      font-size: .78rem;
+      line-height: 1.45;
+    }
+
+    .msg.them {
+      background: rgba(9, 33, 56, .5);
+      border: 1px solid rgba(16, 185, 129, .15);
+      color: var(--cream);
+      align-self: flex-start;
+      border-radius: 2px 10px 10px 10px;
+    }
+
+    .msg.me {
+      background: rgba(5, 150, 105, .3);
+      border: 1px solid rgba(5, 150, 105, .35);
+      color: var(--cream);
+      align-self: flex-end;
+      border-radius: 10px 2px 10px 10px;
+    }
+
+    .chat-input-row {
+      padding: .7rem;
+      border-top: 1px solid rgba(16, 185, 129, .1);
+      display: flex;
+      gap: .5rem;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 8px 12px;
+      background: rgba(5, 20, 36, .8);
+      border: 1px solid rgba(16, 185, 129, .18);
+      border-radius: 50px;
+      color: var(--cream);
+      font-size: .8rem;
+    }
+
+    .chat-input::placeholder {
+      color: rgba(94, 136, 163, .4);
+    }
+
+    .chat-send {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--g500), var(--g400));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .9rem;
+      transition: var(--tr);
+    }
+
+    .chat-send:hover {
+      transform: scale(1.08);
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(5, 20, 36, .98);
+      border: 1px solid rgba(16, 185, 129, .35);
+      border-radius: 50px;
+      padding: .75rem 1.4rem;
+      font-size: .82rem;
+      color: var(--cream);
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      transition: .3s ease;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.error {
+      border-color: rgba(229, 62, 62, .4);
+    }
+
+    /* ── RATING STARS ── */
+    .star-rating {
+      display: flex;
+      gap: 3px;
+    }
+
+    .star {
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: rgba(148, 163, 184, .2);
+      transition: var(--tr);
+    }
+
+    .star.active,
+    .star:hover {
+      color: var(--amber-l);
+    }
+
+    /* ── SIDEBAR TOGGLE ── */
+    .sidebar-toggle {
+      position: absolute;
+      top: .7rem;
+      left: 1rem;
+      z-index: 30;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(2, 11, 20, .92);
+      border: 1px solid rgba(16, 185, 129, .2);
+      color: var(--g300);
+      font-size: .9rem;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex;
+      gap: .4rem;
+      padding: .6rem 1rem;
+      background: rgba(6, 12, 8, .9);
+      border-bottom: 1px solid rgba(16, 185, 129, .08);
+    }
+
+    .stats-item {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(5, 20, 36, .7);
+      border: 1px solid rgba(16, 185, 129, .1);
+      border-radius: 50px;
+      padding: 4px 12px;
+    }
+
+    .stats-item span {
+      font-size: .7rem;
+      color: rgba(148, 163, 184, .45);
+    }
+
+    .stats-item strong {
+      font-size: .75rem;
+      color: var(--g300);
+      font-weight: 700;
+    }
+
+    /* ── LOADING ── */
+    .map-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 11, 20, .85);
+      z-index: 50;
+      gap: .8rem;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(16, 185, 129, .2);
+      border-top-color: var(--g400);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .map-loading p {
+      font-size: .82rem;
+      color: rgba(148, 163, 184, .5);
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:768px) {
+      .auth-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-brand {
+        display: none;
+      }
+
+      .sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 200;
+        transform: translateX(-100%);
+        width: 300px !important;
+      }
+
+      .sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      .sidebar-toggle {
+        display: flex;
+      }
+
+      .post-form-card {
+        grid-column: span 1;
+      }
+
+      .posted-list {
+        grid-column: span 1;
+      }
+
+      .pf-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <script src="//unpkg.com/three"></script>
+  <script src="//unpkg.com/globe.gl"></script>
+</head>
+
+<body>
+
+  <!-- ════════════════════════════════════
+     AUTH SCREEN
+════════════════════════════════════ -->
+  <div class="screen" id="auth-screen">
+    <div id="globeViz" style="position:absolute; inset:0; z-index:-1;"></div>
+    <div class="auth-wrap">
+      <!-- Brand -->
+      <div class="auth-brand">
+        <div class="auth-logo" style="gap:14px; display:flex; align-items:center; margin-bottom:2.5rem;">
+          <svg class="corp-logo" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--g400)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            style="flex-shrink:0; filter:drop-shadow(0 0 10px rgba(16,185,129,0.3));">
+            <path d="M12 22C12 22 20 18 20 12C20 6 12 2 12 2C12 2 4 6 4 12C4 18 12 22 12 22Z"
+              fill="rgba(16,185,129,0.15)"></path>
+            <line x1="12" y1="22" x2="12" y2="12"></line>
+            <line x1="12" y1="12" x2="8.5" y2="12"></line>
+            <line x1="12" y1="16.5" x2="14.5" y2="15"></line>
+          </svg>
+          <h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:800;color:var(--amber-l);">Agri<span
+              style="color:var(--g300);">Help</span></h1>
+        </div>
+        <h2>Connect Farmers<br>with <em>Buyers Directly</em></h2>
+        <p>A live map-based marketplace where farmers find nearby buyers instantly — no middlemen, fair prices,
+          real-time updates.</p>
+        <div class="brand-pills">
+          <span class="brand-pill">📍 Live Map</span>
+          <span class="brand-pill">⚡ Real-Time</span>
+          <span class="brand-pill">📏 Haversine Distance</span>
+          <span class="brand-pill">🔔 Notifications</span>
+          <span class="brand-pill">💬 Live Chat</span>
+          <span class="brand-pill">⭐ Ratings</span>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="auth-form-wrap">
+        <!-- Role -->
+        <div class="role-tabs">
+          <button class="role-tab active" onclick="setRole('farmer')">🌾 Farmer</button>
+          <button class="role-tab" onclick="setRole('buyer')">🛒 Buyer</button>
+        </div>
+        <!-- Login / Signup -->
+        <div class="auth-tab-btns">
+          <button class="auth-tab-btn active" onclick="setAuthTab('login')">Login</button>
+          <button class="auth-tab-btn" onclick="setAuthTab('signup')">Sign Up</button>
+        </div>
+
+        <!-- Login -->
+        <div class="auth-panel active" id="panel-login">
+          <div class="form-title">Welcome Back</div>
+          <p class="form-sub">Sign in to your AgriHelp account</p>
+          <div class="fg"><label>EMAIL / MOBILE</label>
+            <div class="fi"><span class="fi-icon">📧</span><input type="text" id="login-email"
+                placeholder="you@email.com or 9876543210"></div>
+          </div>
+          <div class="fg"><label>PASSWORD</label>
+            <div class="fi"><span class="fi-icon">🔒</span><input type="password" id="login-pass"
+                placeholder="Your password"></div>
+          </div>
+          <button class="auth-submit" onclick="handleLogin()">Sign In →</button>
+          <p class="auth-note">Demo: any email + any password works</p>
+        </div>
+
+        <!-- Signup -->
+        <div class="auth-panel" id="panel-signup">
+          <div class="form-title">Create Account</div>
+          <p class="form-sub">Join AgriHelp as a <strong id="role-label" style="color:var(--g300)">Farmer</strong></p>
+          <div class="fg"><label>FULL NAME</label>
+            <div class="fi"><span class="fi-icon">👤</span><input type="text" id="su-name" placeholder="Ramesh Patil">
+            </div>
+          </div>
+          <div class="fg"><label>EMAIL</label>
+            <div class="fi"><span class="fi-icon">📧</span><input type="email" id="su-email"
+                placeholder="you@email.com"></div>
+          </div>
+          <div class="fg"><label>MOBILE</label>
+            <div class="fi"><span class="fi-icon">📱</span><input type="tel" id="su-mobile"
+                placeholder="10-digit mobile number"></div>
+          </div>
+          <div class="fg"><label>PASSWORD</label>
+            <div class="fi"><span class="fi-icon">🔒</span><input type="password" id="su-pass"
+                placeholder="Min 6 characters"></div>
+          </div>
+          <button class="auth-submit" onclick="handleSignup()">Create Account →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+     MAIN APP
+════════════════════════════════════ -->
+  <div id="app">
+    <!-- Topbar -->
+    <div class="topbar">
+      <a class="tb-logo" href="#" style="display:flex; align-items:center; gap:8px;">
+        <svg class="corp-logo" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--g400)"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22C12 22 20 18 20 12C20 6 12 2 12 2C12 2 4 6 4 12C4 18 12 22 12 22Z"
+            fill="rgba(16,185,129,0.15)"></path>
+          <line x1="12" y1="22" x2="12" y2="12"></line>
+          <line x1="12" y1="12" x2="8.5" y2="12"></line>
+          <line x1="12" y1="16.5" x2="14.5" y2="15"></line>
+        </svg>
+        <span>AgriHelp</span>
+      </a>
+      <span class="tb-role-badge" id="tb-role">Farmer</span>
+      <div class="stats-bar" id="stats-bar" style="background:transparent;border:none;padding:0;margin:0;">
+        <div class="stats-item"><span>Buyers Nearby</span><strong id="stat-buyers">0</strong></div>
+        <div class="stats-item"><span>Avg Distance</span><strong id="stat-dist">— km</strong></div>
+        <div class="stats-item" id="stat-live"><span>🟢 Live</span></div>
+      </div>
+      <div class="tb-spacer"></div>
+      <div class="tb-user">
+        <div class="tb-notify" onclick="toggleNotifications()" id="notif-btn">
+          🔔<span class="notif-badge" id="notif-count">3</span>
+        </div>
+        <div class="tb-avatar" id="tb-avatar">👨‍🌾</div>
+        <span class="tb-name" id="tb-name">User</span>
+        <button class="tb-btn" onclick="toggleFertilizerDash()">🌱 Fertilizers</button>
+        <button class="tb-btn" onclick="toggleColdStorage()">❄️ Cold Storage</button>
+        <button class="tb-btn" id="dash-btn" onclick="toggleBuyerDash()">📊 Dashboard</button>
+        <button class="tb-btn" onclick="handleLogout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- App Body -->
+    <div class="app-body">
+      <!-- Sidebar (Farmer view) -->
+      <div class="sidebar" id="sidebar">
+        <!-- Filters -->
+        <div class="sb-section">
+          <div class="sb-section-title">FILTERS <span onclick="resetFilters()">Reset</span></div>
+          <div class="filter-row">
+            <select class="f-select" id="filter-product" onchange="applyFilters()">
+              <option value="">All Products</option>
+              <option>Rice</option>
+              <option>Wheat</option>
+              <option>Tomatoes</option>
+              <option>Onions</option>
+              <option>Potatoes</option>
+              <option>Soybean</option>
+              <option>Cotton</option>
+              <option>Sugarcane</option>
+            </select>
+            <select class="f-select" id="filter-sort" onchange="applyFilters()">
+              <option value="distance">Sort: Distance</option>
+              <option value="price">Sort: Price ↑</option>
+              <option value="quantity">Sort: Quantity</option>
+            </select>
+          </div>
+          <div class="f-range-wrap">
+            <label>Max Distance <strong id="range-val">25</strong> km</label>
+            <input type="range" class="f-range" min="1" max="100" value="25" id="filter-distance"
+              oninput="updateRangeLabel()" onchange="applyFilters()">
+          </div>
+          <div class="f-range-wrap">
+            <label>Min Price ₹<strong id="price-val">0</strong>/qt</label>
+            <input type="range" class="f-range" min="0" max="10000" value="0" step="100" id="filter-price"
+              oninput="updatePriceLabel()" onchange="applyFilters()">
+          </div>
+        </div>
+
+        <!-- Buyer list -->
+        <div class="sb-section" style="border-bottom:none;padding-bottom:.3rem;">
+          <div class="sb-section-title">NEARBY BUYERS <span id="buyer-count-label">0 found</span></div>
+        </div>
+        <div class="buyer-list" id="buyer-list">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div class="map-area">
+        <div class="map-loading" id="map-loading">
+          <div class="spinner"></div>
+          <p>Detecting your location...</p>
+        </div>
+        <div id="map" style="width:100%; height:100%; z-index:1; background:#04101d;"></div>
+
+        <!-- Map Controls -->
+        <div class="map-controls">
+          <button class="mc-btn" onclick="zoomIn()" title="Zoom In">+</button>
+          <button class="mc-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+          <button class="mc-btn" onclick="resetView()" title="Reset">⌂</button>
+          <button class="mc-btn" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
+        </div>
+
+        <!-- Legend -->
+        <div class="map-legend">
+          <div class="legend-row">
+            <div class="leg-dot" style="background:#4caf80"></div>You (Farmer)
+          </div>
+          <div class="legend-row">
+            <div class="leg-dot" style="background:#60a5fa"></div>Buyer
+          </div>
+          <div class="legend-row">
+            <div class="leg-dot" style="background:#f5c35a"></div>High-value Buyer
+          </div>
+          <div class="legend-row">
+            <div class="leg-dot" style="background:#ff7b7b"></div>Urgent Requirement
+          </div>
+        </div>
+
+        <!-- My Location -->
+        <button class="my-location-btn" onclick="centerOnFarmer()">📍 My Location</button>
+
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detail-panel">
+          <div class="dp-header">
+            <button class="dp-close" onclick="closeDetail()">✕</button>
+            <div class="dp-avatar-row">
+              <div class="dp-avatar" id="dp-avatar">BN</div>
+              <div>
+                <div class="dp-name" id="dp-name">Buyer Name</div>
+                <div class="dp-type" id="dp-type">Wholesaler</div>
+              </div>
+            </div>
+            <div class="dp-dist-badge">📏 <span id="dp-distance">— km away</span></div>
+          </div>
+          <div class="dp-body">
+            <div class="dp-rating">
+              <div class="dp-stars" id="dp-stars">★★★★☆</div>
+              <span class="dp-rating-text" id="dp-rating-text">4.0 · 12 reviews</span>
+            </div>
+            <div class="dp-rows">
+              <div class="dp-row"><span class="dp-row-icon">🌾</span><span class="dp-row-label">Product</span><span
+                  class="dp-row-val" id="dp-product">—</span></div>
+              <div class="dp-row"><span class="dp-row-icon">📦</span><span class="dp-row-label">Quantity</span><span
+                  class="dp-row-val" id="dp-qty">—</span></div>
+              <div class="dp-row"><span class="dp-row-icon">💰</span><span class="dp-row-label">Price</span><span
+                  class="dp-row-val" id="dp-price">—</span></div>
+              <div class="dp-row"><span class="dp-row-icon">📅</span><span class="dp-row-label">Required By</span><span
+                  class="dp-row-val" id="dp-deadline">—</span></div>
+            </div>
+            <!-- Rate this buyer -->
+            <div
+              style="margin-bottom:.7rem;padding:.6rem .7rem;background:rgba(5,20,36,.6);border:1px solid rgba(16,185,129,.1);border-radius:var(--r-sm);">
+              <div style="font-size:.68rem;color:rgba(148,163,184,.4);margin-bottom:.4rem;">RATE THIS BUYER</div>
+              <div class="star-rating" id="rate-stars">
+                <span class="star" onclick="rateBuyer(1)">★</span>
+                <span class="star" onclick="rateBuyer(2)">★</span>
+                <span class="star" onclick="rateBuyer(3)">★</span>
+                <span class="star" onclick="rateBuyer(4)">★</span>
+                <span class="star" onclick="rateBuyer(5)">★</span>
+              </div>
+            </div>
+            <div class="dp-actions" id="dp-actions-container">
+              <!-- Filled dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buyer Dashboard -->
+    <div class="buyer-dash" id="buyer-dash">
+      <div class="dash-header">
+        <h2>Buyer Dashboard</h2>
+        <p>Post your requirements and manage your listings</p>
+      </div>
+      <div class="dash-body">
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+          <div class="stat-num" id="dash-posts">0</div>
+          <div class="stat-label">Active Listings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🤝</div>
+          <div class="stat-num" id="dash-contacts">0</div>
+          <div class="stat-label">Farmer Contacts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📏</div>
+          <div class="stat-num" id="dash-saved">0 km</div>
+          <div class="stat-label">Distance Saved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-num" id="dash-rating">—</div>
+          <div class="stat-label">Avg Rating</div>
+        </div>
+
+        <!-- Post Form -->
+        <div class="post-form-card">
+          <h3>📢 Post a New Requirement</h3>
+          <div class="pf-grid">
+            <div class="pf-field"><label>PRODUCT NAME</label>
+              <select id="pf-product">
+                <option value="">Select product</option>
+                <option>Rice</option>
+                <option>Wheat</option>
+                <option>Tomatoes</option>
+                <option>Onions</option>
+                <option>Potatoes</option>
+                <option>Soybean</option>
+                <option>Cotton</option>
+                <option>Sugarcane</option>
+                <option>Maize</option>
+              </select>
+            </div>
+            <div class="pf-field"><label>QUANTITY (Quintals)</label>
+              <input type="number" id="pf-qty" placeholder="e.g. 50">
+            </div>
+            <div class="pf-field"><label>PRICE OFFERED (₹/quintal)</label>
+              <input type="number" id="pf-price" placeholder="e.g. 2500">
+            </div>
+            <div class="pf-field"><label>CONTACT PHONE</label>
+              <input type="tel" id="pf-phone" placeholder="Your mobile number">
+            </div>
+            <div class="pf-field"><label>REQUIRED BY</label>
+              <input type="date" id="pf-deadline">
+            </div>
+            <div class="pf-field"><label>BUYER TYPE</label>
+              <select id="pf-type">
+                <option>Wholesaler</option>
+                <option>Retailer</option>
+                <option>Exporter</option>
+                <option>Processor</option>
+                <option>Restaurant</option>
+              </select>
+            </div>
+          </div>
+          <div
+            style="margin-top:.8rem;padding:.8rem;background:rgba(5,20,36,.6);border:1px solid rgba(16,185,129,.12);border-radius:var(--r-sm);">
+            <div style="font-size:.72rem;color:rgba(148,163,184,.4);margin-bottom:4px;">YOUR LOCATION (auto-detected)
+            </div>
+            <div style="font-size:.8rem;color:var(--g300);" id="buyer-location-display">📍 Detecting location...</div>
+          </div>
+          <button class="post-btn" onclick="postRequirement()">📢 Post Requirement</button>
+        </div>
+
+        <!-- Posted Items -->
+        <div class="posted-list">
+          <h3>Your Posted Requirements</h3>
+          <div id="posted-items-list">
+            <div style="font-size:.8rem;color:rgba(148,163,184,.3);text-align:center;padding:2rem;">No requirements
+              posted yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end app -->
+
+  <!-- Notifications Panel -->
+  <div class="notif-panel" id="notif-panel">
+    <div class="np-head">
+      <h4>🔔 Notifications</h4>
+      <button class="np-close" onclick="toggleNotifications()">✕</button>
+    </div>
+    <div class="notif-list" id="notif-list"></div>
+  </div>
+
+  <!-- Chat Modal -->
+  <div class="chat-modal" id="chat-modal">
+    <div class="chat-head">
+      <div class="chat-head-info">
+        <div class="chat-avatar" id="chat-avatar">BN</div>
+        <div>
+          <div class="chat-name" id="chat-name">Buyer Name</div>
+          <div class="chat-status">Online</div>
+        </div>
+      </div>
+      <button class="chat-close-btn" onclick="closeChat()">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="msg them">Hello! I'm looking for quality produce directly from farmers. Are you interested?</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..."
+        onkeypress="chatEnter(event)">
+      <button class="chat-send" onclick="sendChatMessage()">➤</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ── COLD STORAGE DASHBOARD ── -->
+  <div class="buyer-dash" id="cold-storage-dash" style="z-index:450;">
+    <div class="dash-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h2>❄️ Cold Storage & Warehouses</h2>
+        <p>Securely store your surplus produce locally</p>
+      </div>
+      <button class="tb-btn" onclick="toggleColdStorage()" style="background:rgba(229,62,62,.1); color:#ff7b7b;">✕
+        Close</button>
+    </div>
+    <div class="dash-body">
+      <div class="stat-card">
+        <div class="stat-icon">❄️</div>
+        <div class="stat-num">24</div>
+        <div class="stat-label">Facilities Nearby</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-num">50k+</div>
+        <div class="stat-label">Total Capacity (MT)</div>
+      </div>
+
+      <div class="posted-list" style="grid-column: span 2;">
+        <h3>Available Facilities</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div class="buyer-card">
+            <div class="bc-head">
+              <div class="bc-avatar">AL</div>
+              <div style="flex:1">
+                <div class="bc-name">AgriCool Logistics</div>
+                <div class="bc-dist">📏 4.2 km away</div>
+              </div>
+            </div>
+            <div class="bc-chips">
+              <span class="bc-chip chip-product">Capacity: 1200 MT</span>
+              <span class="bc-chip chip-price">₹15/qtl/month</span>
+            </div>
+            <div class="bc-footer"><button class="bc-action bc-contact" onclick="bookColdStorage()">Book Space</button>
+            </div>
+          </div>
+          <div class="buyer-card">
+            <div class="bc-head">
+              <div class="bc-avatar">FW</div>
+              <div style="flex:1">
+                <div class="bc-name">FreshSave Warehousing</div>
+                <div class="bc-dist">📏 8.5 km away</div>
+              </div>
+            </div>
+            <div class="bc-chips">
+              <span class="bc-chip chip-product">Capacity: 500 MT</span>
+              <span class="bc-chip chip-price">₹12/qtl/month</span>
+            </div>
+            <div class="bc-footer"><button class="bc-action bc-contact" onclick="bookColdStorage()">Book Space</button>
+            </div>
+          </div>
+          <div class="buyer-card">
+            <div class="bc-head">
+              <div class="bc-avatar">KS</div>
+              <div style="flex:1">
+                <div class="bc-name">Kisan Storage Hub</div>
+                <div class="bc-dist">📏 12.1 km away</div>
+              </div>
+            </div>
+            <div class="bc-chips">
+              <span class="bc-chip chip-product">Capacity: 2500 MT</span>
+              <span class="bc-chip chip-price">₹14/qtl/month</span>
+            </div>
+            <div class="bc-footer"><button class="bc-action bc-contact" onclick="bookColdStorage()">Book Space</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FERTILIZER DASHBOARD ── -->
+  <div class="buyer-dash" id="fertilizer-dash" style="z-index:450;">
+    <div class="dash-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h2>🌱 Fertilizers & Agro-Chemicals</h2>
+        <p>Order certified fertilizers from verified sellers nearby</p>
+      </div>
+      <button class="tb-btn" onclick="toggleFertilizerDash()" style="background:rgba(229,62,62,.1); color:#ff7b7b;">✕
+        Close</button>
+    </div>
+    <div class="dash-body">
+      <!-- Add Product Form -->
+      <div class="post-form-card" style="grid-column: span 2; margin-bottom: 1rem;">
+        <h3>➕ Add Fertilizer Product</h3>
+        <div class="pf-grid">
+          <div class="pf-field"><label>PRODUCT NAME</label>
+            <input type="text" id="add-fert-name" placeholder="e.g. NPK 19:19:19">
+          </div>
+          <div class="pf-field"><label>IMAGE URL</label>
+            <input type="url" id="add-fert-img" placeholder="https://example.com/img.jpg">
+          </div>
+          <div class="pf-field"><label>PRICE (₹)</label>
+            <input type="number" id="add-fert-price" placeholder="e.g. 180">
+          </div>
+          <div class="pf-field"><label>SHORT DESCRIPTION</label>
+            <input type="text" id="add-fert-desc" placeholder="e.g. 50 bags (1kg)">
+          </div>
+        </div>
+        <button class="post-btn" onclick="submitFertilizerForm(event)" style="margin-top: 1rem;">➕ Add Product</button>
+      </div>
+
+      <div class="posted-list" style="grid-column: span 2;">
+        <h3>Available Fertilizer Stock</h3>
+        <div id="fert-list-container"
+          style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1rem;">
+
+          <!-- Demo Card -->
+          <div class="buyer-card">
+            <div
+              style="height:140px; border-radius:var(--r-sm); margin-bottom:.8rem; overflow:hidden; border:1px solid rgba(16,185,129,.15);">
+              <img src="https://australandagri.com.au/wp-content/uploads/2023/02/Urea-A.png" alt="Urea"
+                style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div class="bc-head" style="margin-bottom:0.3rem;">
+              <div style="flex:1">
+                <div class="bc-name">Urea (46% N) - IFFCO</div>
+              </div>
+            </div>
+            <div style="font-size:0.75rem; color:rgba(148,163,184,.6); margin-bottom:0.6rem; min-height: 2.5em;">High
+              quality urea for maximum crop yield. 50 bags available.</div>
+            <div class="bc-chips">
+              <span class="bc-chip chip-price">₹266</span>
+            </div>
+            <div class="bc-footer"><button class="bc-action bc-contact" onclick="bookFertilizer()">Order Now</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── WEB CALL MODAL ── -->
+  <div id="call-modal"
+    style="display:none; position:fixed; inset:0; background:rgba(2,11,20,0.9); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
+    <div
+      style="background:rgba(5,20,36,.9); padding:3rem; border-radius:var(--r-xl); text-align:center; border:1px solid rgba(16,185,129,.3); width:320px; box-shadow:var(--shadow-lg);">
+      <div id="call-avatar" style="font-size:3.5rem; margin-bottom:1rem; animation: pulse 1.5s infinite;">📞</div>
+      <style>
+        @keyframes pulse {
+          0% {
+            transform: scale(1);
+          }
+
+          50% {
+            transform: scale(1.1);
+          }
+
+          100% {
+            transform: scale(1);
+          }
+        }
+      </style>
+      <h3 style="font-family:'Fraunces',serif; font-size:1.4rem; color:var(--cream); margin-bottom:0.4rem;"
+        id="call-name">Buyer Name</h3>
+      <p style="color:rgba(148,163,184,.6); font-size:0.8rem; margin-bottom:2rem;">Secure Web Call (Private Number)</p>
+      <div style="font-size:0.9rem; font-weight:600; color:var(--g300); margin-bottom:2.5rem;" id="call-status">
+        Ringing...</div>
+      <div style="display:flex; justify-content:center; gap:1rem;">
+        <button onclick="endCall()"
+          style="background:#e53e3e; color:#fff; width:60px; height:60px; border-radius:50%; font-size:1.5rem; display:flex; align-items:center; justify-content:center; border:2px solid #ff7b7b;">☎</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MATCH REQUEST MODAL ── -->
+  <div id="match-modal"
+    style="display:none; position:fixed; inset:0; background:rgba(2,11,20,0.9); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
+    <div
+      style="background:rgba(5,20,36,.9); padding:2rem; border-radius:var(--r-xl); width:340px; border:1px solid rgba(16,185,129,.3); box-shadow:var(--shadow-lg);">
+      <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;">
+        <h3 style="font-family:'Fraunces',serif; font-size:1.2rem; color:var(--cream);">Connect Request</h3>
+        <button onclick="closeMatchModal()"
+          style="background:none; border:none; color:rgba(148,163,184,.5); font-size:1.2rem; cursor:pointer;">✕</button>
+      </div>
+
+      <div
+        style="background:rgba(2,11,20,.6); padding:1rem; border-radius:var(--r-sm); margin-bottom:1.5rem; border:1px solid rgba(16,185,129,.15);">
+        <div style="font-size:0.75rem; color:rgba(148,163,184,.6); margin-bottom:4px;">BUYER WANTS</div>
+        <div style="font-size:0.9rem; color:var(--g300); font-weight:600;"><span id="match-buyer-qty"></span> qt <span
+            id="match-buyer-product"></span></div>
+        <div style="font-size:0.8rem; color:var(--amber-l);">At ₹<span id="match-buyer-price"></span>/qt</div>
+      </div>
+
+      <div class="pf-field" style="margin-bottom:1rem;">
+        <label style="display:block;font-size:.72rem;font-weight:600;color:var(--g200);margin-bottom:6px;">YOUR
+          AVAILABLE QUANTITY (qt)</label>
+        <input type="number" id="match-qty" placeholder="e.g. 50"
+          style="width:100%;padding:10px 12px;background:rgba(2,11,20,.8);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-sm);color:var(--cream);font-size:.85rem;font-family:'Sora',sans-serif;">
+      </div>
+      <div class="pf-field" style="margin-bottom:1.5rem;">
+        <label style="display:block;font-size:.72rem;font-weight:600;color:var(--g200);margin-bottom:6px;">YOUR EXPECTED
+          PRICE (₹/qt)</label>
+        <input type="number" id="match-price" placeholder="e.g. 2400"
+          style="width:100%;padding:10px 12px;background:rgba(2,11,20,.8);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-sm);color:var(--cream);font-size:.85rem;font-family:'Sora',sans-serif;">
+      </div>
+
+      <button onclick="submitMatchRequest()"
+        style="width:100%; padding:12px; background:linear-gradient(135deg,var(--g500),var(--g400)); border-radius:var(--r-sm); color:var(--g900); font-weight:700; transition:var(--tr);">Send
+        Match Request</button>
+    </div>
+  </div>
+
+  <script>
+/* ═══════════════════════════════════════════════════════════════
+       AGRIHELP — COMPLETE APPLICATION LOGIC
+       
+       Tech Architecture:
+       - Canvas-based map (simulates Google Maps in standalone mode)
+       - Haversine Formula for real distance calculation
+       - JWT simulation (localStorage tokens)
+       - Real-time simulation via setInterval
+       - WebSocket-like notification system
+    ═══════════════════════════════════════════════════════════════ */
+
+    // ─── STATE ───────────────────────────────────────────────────
+    const STATE = {
+      connectionStatus: {},    // Tracks 'matched' or 'pending' connections
+      role: 'farmer',          // 'farmer' | 'buyer'
+      user: null,              // logged-in user object
+      farmerLat: 18.5204,      // Default: Pune, Maharashtra
+      farmerLng: 73.8567,
+      buyers: [],              // all buyer posts
+      filteredBuyers: [],      // after filter
+      selectedBuyer: null,     // currently selected on map
+      notifications: [],
+      postedRequirements: [],  // buyer's own posts
+      zoom: 1,
+      panX: 0, panY: 0,
+      chatOpen: false,
+      notifOpen: false,
+      buyerDashOpen: false,
+      stats: { contacts: 0, distanceSaved: 0, rating: null },
+      mapReady: false,
+    };
+
+    // ─── SEED BUYER DATA ──────────────────────────────────────────
+    const SEED_BUYERS = [
+      { id: 1, name: 'Suresh Wholesalers', emoji: 'SW', type: 'Wholesaler', product: 'Tomatoes', qty: 500, price: 2400, lat: 18.5500, lng: 73.8800, phone: '9876543210', deadline: '2026-04-15', rating: 4.5, reviews: 18, urgent: false, highValue: true },
+      { id: 2, name: 'Pune Fresh Market', emoji: 'PM', type: 'Retailer', product: 'Onions', qty: 200, price: 1800, lat: 18.4900, lng: 73.8300, phone: '9823456789', deadline: '2026-04-10', rating: 3.8, reviews: 7, urgent: true, highValue: false },
+      { id: 3, name: 'Raj Exports Pvt Ltd', emoji: 'RE', type: 'Exporter', product: 'Rice', qty: 1000, price: 3200, lat: 18.5700, lng: 73.9100, phone: '9812345678', deadline: '2026-04-20', rating: 4.2, reviews: 24, urgent: false, highValue: true },
+      { id: 4, name: 'Hotel Grand Hyatt', emoji: 'HH', type: 'Restaurant', product: 'Potatoes', qty: 80, price: 1500, lat: 18.5100, lng: 73.8100, phone: '9898989898', deadline: '2026-04-08', rating: 4.8, reviews: 5, urgent: true, highValue: false },
+      { id: 5, name: 'AgriProcess Industries', emoji: 'AI', type: 'Processor', product: 'Wheat', qty: 2000, price: 2800, lat: 18.6000, lng: 73.9300, phone: '9867123456', deadline: '2026-05-01', rating: 4.0, reviews: 31, urgent: false, highValue: true },
+      { id: 6, name: 'City Supermart', emoji: 'CS', type: 'Retailer', product: 'Tomatoes', qty: 150, price: 2200, lat: 18.4800, lng: 73.8600, phone: '9845671234', deadline: '2026-04-12', rating: 3.5, reviews: 9, urgent: false, highValue: false },
+      { id: 7, name: 'Mahadev Traders', emoji: 'MT', type: 'Wholesaler', product: 'Soybean', qty: 800, price: 4500, lat: 18.5300, lng: 73.7900, phone: '9876012345', deadline: '2026-04-25', rating: 4.6, reviews: 42, urgent: false, highValue: true },
+      { id: 8, name: 'Spice Route Exports', emoji: 'SE', type: 'Exporter', product: 'Onions', qty: 600, price: 2100, lat: 18.5800, lng: 73.8400, phone: '9823001122', deadline: '2026-04-18', rating: 4.1, reviews: 15, urgent: true, highValue: false },
+    ];
+
+    // ─── HAVERSINE FORMULA ────────────────────────────────────────
+    /**
+     * Calculate distance between two GPS coordinates
+     * using the Haversine formula
+     * @returns distance in kilometers
+     */
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth radius in km
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+    function toRad(deg) { return deg * (Math.PI / 180); }
+
+    // ─── AUTH LOGIC ───────────────────────────────────────────────
+    let currentRole = 'farmer';
+    let currentAuthTab = 'login';
+
+    function setRole(role) {
+      currentRole = role;
+      document.querySelectorAll('.role-tab').forEach((t, i) =>
+        t.classList.toggle('active', (role === 'farmer' && i === 0) || (role === 'buyer' && i === 1)));
+      document.getElementById('role-label').textContent = role === 'farmer' ? 'Farmer' : 'Buyer';
+    }
+
+    function setAuthTab(tab) {
+      currentAuthTab = tab;
+      document.querySelectorAll('.auth-tab-btn').forEach((b, i) =>
+        b.classList.toggle('active', (tab === 'login' && i === 0) || (tab === 'signup' && i === 1)));
+      document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+      document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
+    }
+
+    function handleLogin() {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-pass').value;
+
+      if (!email || !pass) { showToast('⚠️ Please fill in all fields', 'error'); return; }
+
+      // Frontend Email and Mobile validation
+      if (!emailRegex.test(email) && !/^\d{10}$/.test(email)) {
+        showToast('⚠️ Invalid email or mobile format', 'error'); return;
+      }
+
+      // Frontend Password length validation
+      if (pass.length < 6) { showToast('⚠️ Password must be at least 6 characters', 'error'); return; }
+
+      /*
+        BACKEND VALIDATION SUGGESTION (Node.js/Express):
+        app.post('/api/login', async (req, res) => {
+          const { email, password } = req.body;
+          if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !/^\d{10}$/.test(email)) return res.status(400).json({ error: 'Invalid format' });
+          if (password.length < 6) return res.status(400).json({ error: 'Password too short' });
+    
+          const user = await db.users.findOne({ email });
+          if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+             return res.status(401).json({ error: 'Invalid credentials' });
+          }
+          // Generate && return JWT token
+        });
+      */
+
+      // Simulate JWT auth — in production, POST /api/auth/login
+      const token = btoa(JSON.stringify({ email, role: currentRole, exp: Date.now() + 86400000 }));
+      localStorage.setItem('agrihelp_token', token);
+
+      const name = email.split('@')[0].replace(/\d/g, '').replace(/^./, c => c.toUpperCase()) || 'User';
+      STATE.user = { name, email, role: currentRole };
+      launchApp();
+    }
+
+    function handleSignup() {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const name = document.getElementById('su-name').value.trim();
+      const email = document.getElementById('su-email').value.trim();
+      const mobile = document.getElementById('su-mobile').value.trim();
+      const pass = document.getElementById('su-pass').value;
+
+      if (!name || !email || !mobile || !pass) { showToast('⚠️ Please fill in all fields', 'error'); return; }
+
+      // Frontend validations
+      if (!emailRegex.test(email)) { showToast('⚠️ Invalid email format (e.g. user@gmail.com)', 'error'); return; }
+      if (!/^\d{10}$/.test(mobile)) { showToast('⚠️ Mobile must be 10 digits', 'error'); return; }
+      if (pass.length < 6) { showToast('⚠️ Password must be at least 6 characters', 'error'); return; }
+      if (pass.length > 50) { showToast('⚠️ Password is too long', 'error'); return; }
+
+      /*
+        BACKEND VALIDATION SUGGESTION (Firebase Authentication):
+        try {
+          const userCredential = await admin.auth().createUser({
+             email: email,
+             emailVerified: false,
+             phoneNumber: '+91' + mobile,
+             password: pass,
+             displayName: name,
+             disabled: false,
+          });
+          // Optionally save user details in Firestore backend
+        } catch (error) {
+          if (error.code === 'auth/invalid-password') {
+             // handle error
+          }
+        }
+      */
+
+      const token = btoa(JSON.stringify({ email, role: currentRole, exp: Date.now() + 86400000 }));
+      localStorage.setItem('agrihelp_token', token);
+      STATE.user = { name, email, role: currentRole };
+      launchApp();
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('agrihelp_token');
+      STATE.user = null;
+      document.getElementById('app').classList.remove('active');
+      document.getElementById('auth-screen').classList.remove('hidden');
+      STATE.mapReady = false;
+    }
+
+    // ─── APP LAUNCH ───────────────────────────────────────────────
+    function launchApp() {
+      const role = STATE.user.role;
+      STATE.role = role;
+
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('app').classList.add('active');
+
+      // Update topbar
+      document.getElementById('tb-name').textContent = STATE.user.name;
+      document.getElementById('tb-avatar').textContent = STATE.user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U';
+      const badge = document.getElementById('tb-role');
+      badge.textContent = role === 'farmer' ? '🌾 Farmer' : '🛒 Buyer';
+      badge.className = 'tb-role-badge' + (role === 'buyer' ? ' buyer' : '');
+
+      // Show/hide dashboard button
+      document.getElementById('dash-btn').style.display = role === 'buyer' ? 'block' : 'none';
+      document.getElementById('sidebar').style.display = role === 'farmer' ? 'flex' : 'none';
+
+      // Load buyers with distance
+      loadBuyersWithDistance();
+
+      // Detect location
+      detectLocation();
+
+      // Seed notifications
+      seedNotifications();
+
+      // Initialize dynamic posts for dashboard
+      const dynamicPosts = JSON.parse(localStorage.getItem('agrihelp_dynamic_posts') || '[]');
+      STATE.postedRequirements = dynamicPosts;
+
+      // Real-time simulation
+      startRealTimeSimulation();
+    }
+
+    // ─── GEOLOCATION ─────────────────────────────────────────────
+    function detectLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            STATE.farmerLat = pos.coords.latitude;
+            STATE.farmerLng = pos.coords.longitude;
+            showToast('📍 Location detected!');
+            loadBuyersWithDistance();
+            initMap();
+          },
+          () => {
+            // Use default (Pune) if permission denied
+            showToast('📍 Using default location: Pune, MH');
+            initMap();
+          }
+        );
+      } else {
+        initMap();
+      }
+      // Update buyer location display
+      document.getElementById('buyer-location-display').textContent =
+        `📍 Lat: ${STATE.farmerLat.toFixed(4)}, Lng: ${STATE.farmerLng.toFixed(4)}`;
+    }
+
+    // ─── BUYERS + DISTANCE ────────────────────────────────────────
+    function loadBuyersWithDistance() {
+      const dynamicPosts = JSON.parse(localStorage.getItem('agrihelp_dynamic_posts') || '[]');
+      const dynamicBuyers = dynamicPosts.map(req => ({
+        id: req.id, name: req.posterName || 'Local Buyer', emoji: 'LB', type: req.type, product: req.product, qty: req.qty,
+        price: req.price, lat: req.lat, lng: req.lng, phone: req.phone,
+        deadline: req.deadline || 'Open', rating: 4.0, reviews: 0, urgent: false, highValue: req.price > 3000
+      }));
+      const allBuyers = [...SEED_BUYERS, ...dynamicBuyers];
+
+      STATE.buyers = allBuyers.map(b => ({
+        ...b,
+        distance: haversine(STATE.farmerLat, STATE.farmerLng, b.lat, b.lng)
+      }));
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const product = document.getElementById('filter-product')?.value || '';
+      const maxDist = parseFloat(document.getElementById('filter-distance')?.value || 100);
+      const minPrice = parseFloat(document.getElementById('filter-price')?.value || 0);
+      const sortBy = document.getElementById('filter-sort')?.value || 'distance';
+
+      let list = STATE.buyers.filter(b => {
+        if (product && b.product !== product) return false;
+        if (b.distance > maxDist) return false;
+        if (b.price < minPrice) return false;
+        return true;
+      });
+
+      if (sortBy === 'distance') list.sort((a, b) => a.distance - b.distance);
+      else if (sortBy === 'price') list.sort((a, b) => b.price - a.price);
+      else if (sortBy === 'quantity') list.sort((a, b) => b.qty - a.qty);
+
+      STATE.filteredBuyers = list;
+      renderBuyerList();
+      renderMap();
+      updateStats();
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-product').value = '';
+      document.getElementById('filter-distance').value = 25;
+      document.getElementById('filter-price').value = 0;
+      document.getElementById('filter-sort').value = 'distance';
+      updateRangeLabel(); updatePriceLabel();
+      applyFilters();
+    }
+
+    function updateRangeLabel() {
+      document.getElementById('range-val').textContent = document.getElementById('filter-distance').value;
+    }
+    function updatePriceLabel() {
+      document.getElementById('price-val').textContent = document.getElementById('filter-price').value;
+    }
+
+    // ─── BUYER LIST (SIDEBAR) ─────────────────────────────────────
+    function renderBuyerList() {
+      const list = document.getElementById('buyer-list');
+      const label = document.getElementById('buyer-count-label');
+      const buyers = STATE.filteredBuyers;
+
+      label.textContent = `${buyers.length} found`;
+      if (!list) return;
+
+      if (buyers.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:2rem;font-size:.78rem;color:rgba(148,163,184,.3);">No buyers match your filters</div>';
+        return;
+      }
+
+      list.innerHTML = buyers.map(b => `
+    <div class="buyer-card ${STATE.selectedBuyer?.id === b.id ? 'active' : ''}"
+         onclick="selectBuyer(${b.id})">
+      <div class="bc-head">
+        <div class="bc-avatar">${b.emoji}</div>
+        <div style="flex:1">
+          <div class="bc-name">${b.name}</div>
+          <div class="bc-dist">📏 ${b.distance.toFixed(1)} km away</div>
+        </div>
+        ${b.urgent ? '<span style="font-size:.62rem;background:rgba(229,62,62,.15);border:1px solid rgba(229,62,62,.3);color:#ff7b7b;padding:2px 7px;border-radius:50px;font-weight:700;">URGENT</span>' : ''}
+      </div>
+      <div class="bc-chips">
+        <span class="bc-chip chip-product">🌾 ${b.product}</span>
+        <span class="bc-chip chip-price">₹${b.price.toLocaleString()}/qt</span>
+        <span class="bc-chip chip-qty">📦 ${b.qty} qt</span>
+      </div>
+      <div class="bc-footer">
+        ${getConnectionButtonHTML(b.id)}
+        <button class="bc-action bc-view" onclick="event.stopPropagation();selectBuyer(${b.id})">View on Map</button>
+      </div>
+    </div>
+  `).join('');
+    }
+
+    function updateStats() {
+      const buyers = STATE.filteredBuyers;
+      document.getElementById('stat-buyers').textContent = buyers.length;
+      if (buyers.length > 0) {
+        const avg = buyers.reduce((s, b) => s + b.distance, 0) / buyers.length;
+        document.getElementById('stat-dist').textContent = avg.toFixed(1) + ' km';
+      } else {
+        document.getElementById('stat-dist').textContent = '— km';
+      }
+    }
+
+    // ─── SELECT BUYER ─────────────────────────────────────────────
+    function selectBuyer(id) {
+      const b = STATE.buyers.find(x => x.id === id);
+      if (!b) return;
+      STATE.selectedBuyer = b;
+      renderBuyerList();
+
+      // Fill detail panel
+      document.getElementById('dp-name').textContent = b.name;
+      document.getElementById('dp-type').textContent = b.type;
+      document.getElementById('dp-avatar').textContent = b.emoji;
+      document.getElementById('dp-distance').textContent = `${b.distance.toFixed(2)} km away`;
+      document.getElementById('dp-product').textContent = b.product;
+      document.getElementById('dp-qty').textContent = `${b.qty} quintals`;
+      document.getElementById('dp-price').textContent = `₹${b.price.toLocaleString()}/quintal`;
+      document.getElementById('dp-deadline').textContent = b.deadline;
+
+      const actionsContainer = document.getElementById('dp-actions-container');
+      const status = STATE.connectionStatus[b.id];
+      if (status === 'matched') {
+        actionsContainer.innerHTML = `
+      <button class="dp-btn dp-btn-primary" onclick="openChat()">💬 Send Message</button>
+      <button class="dp-btn dp-btn-secondary" onclick="callBuyer()">📞 Secure Web Call</button>
+    `;
+      } else if (status === 'pending') {
+        actionsContainer.innerHTML = `
+      <button class="dp-btn" style="background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.25);color:var(--amber-l);cursor:not-allowed;">⏳ Request Pending</button>
+    `;
+      } else {
+        actionsContainer.innerHTML = `
+      <button class="dp-btn dp-btn-primary" onclick="openMatchModal(${b.id})">🔗 Connect to Buyer</button>
+    `;
+      }
+
+      // Stars
+      const stars = '★'.repeat(Math.floor(b.rating)) + '☆'.repeat(5 - Math.floor(b.rating));
+      document.getElementById('dp-stars').textContent = stars;
+      document.getElementById('dp-rating-text').textContent = `${b.rating} · ${b.reviews} reviews`;
+
+      document.getElementById('detail-panel').classList.add('open');
+      document.getElementById('chat-name').textContent = b.name;
+      document.getElementById('chat-avatar').textContent = b.emoji;
+
+      renderMap(); // highlight selected
+    }
+
+    function closeDetail() {
+      document.getElementById('detail-panel').classList.remove('open');
+      STATE.selectedBuyer = null;
+      renderBuyerList();
+      renderMap();
+    }
+
+    function getConnectionButtonHTML(id) {
+      const status = STATE.connectionStatus[id];
+      if (status === 'matched') return `<button class="bc-action bc-contact" onclick="event.stopPropagation();openChatForBuyer(${id})">💬 Chat</button>`;
+      if (status === 'pending') return `<button class="bc-action" style="background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.2);color:var(--amber-l);" onclick="event.stopPropagation();">⏳ Pending</button>`;
+      return `<button class="bc-action" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--g300);" onclick="event.stopPropagation();openMatchModal(${id})">🔗 Connect</button>`;
+    }
+
+    let matchTargetBuyer = null;
+    function openMatchModal(id) {
+      const b = STATE.buyers.find(x => x.id === id);
+      if (!b) return;
+      matchTargetBuyer = b;
+      document.getElementById('match-buyer-qty').textContent = b.qty;
+      document.getElementById('match-buyer-product').textContent = b.product;
+      document.getElementById('match-buyer-price').textContent = b.price;
+      document.getElementById('match-qty').value = '';
+      document.getElementById('match-price').value = '';
+      document.getElementById('match-modal').style.display = 'flex';
+    }
+
+    function closeMatchModal() {
+      document.getElementById('match-modal').style.display = 'none';
+      matchTargetBuyer = null;
+    }
+
+    function submitMatchRequest() {
+      if (!matchTargetBuyer) return;
+      const qty = parseInt(document.getElementById('match-qty').value);
+      const price = parseInt(document.getElementById('match-price').value);
+      if (!qty || !price) {
+        showToast('⚠️ Please enter both quantity and price.', 'error');
+        return;
+      }
+
+      if (price <= matchTargetBuyer.price && qty >= matchTargetBuyer.qty * 0.5) {
+        STATE.connectionStatus[matchTargetBuyer.id] = 'matched';
+        showToast("🎉 It's a Match! Chat and Call are unlocked.", 'success');
+      } else {
+        STATE.connectionStatus[matchTargetBuyer.id] = 'pending';
+        showToast('📨 Connect Request sent. Waiting for buyer.', '');
+      }
+
+      closeMatchModal();
+      renderBuyerList();
+      if (STATE.selectedBuyer && STATE.selectedBuyer.id === matchTargetBuyer.id) {
+        selectBuyer(matchTargetBuyer.id); // re-render detail panel
+      }
+    }
+
+    // ─── LEAFLET GEOGRAPHICAL MAP ENGINE ────────────────────────────────────────
+    let mapInstance = null;
+    let farmerMarker = null;
+    let buyerMarkers = [];
+    let distanceLines = [];
+
+    function initMap() {
+      if (mapInstance) mapInstance.remove();
+
+      // Create Leaflet map
+      mapInstance = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([STATE.farmerLat, STATE.farmerLng], 12);
+
+      // CartoDB Dark Matter base map for geographic location
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19
+      }).addTo(mapInstance);
+
+      document.getElementById('map-loading').style.display = 'none';
+      STATE.mapReady = true;
+
+      // Ensure the map resizes correctly
+      setTimeout(() => mapInstance.invalidateSize(), 500);
+      window.addEventListener('resize', () => mapInstance.invalidateSize());
+
+      renderMap();
+    }
+
+    function resizeCanvas() {
+      if (mapInstance) mapInstance.invalidateSize();
+    }
+
+    function renderMap() {
+      if (!mapInstance) return;
+
+      // Clear old markers and lines
+      if (farmerMarker) farmerMarker.remove();
+      buyerMarkers.forEach(m => m.remove());
+      distanceLines.forEach(l => l.remove());
+      buyerMarkers = [];
+      distanceLines = [];
+
+      // Draw Farmer Group
+      const farmerGrp = L.layerGroup().addTo(mapInstance);
+
+      // Range circle around farmer
+      const rangeKm = parseFloat(document.getElementById('filter-distance')?.value || 25);
+      L.circle([STATE.farmerLat, STATE.farmerLng], {
+        color: 'rgba(16,185,129,0.6)',
+        fillColor: 'rgba(16,185,129,0.1)',
+        fillOpacity: 1,
+        radius: rangeKm * 1000,
+        weight: 2,
+        dashArray: '6, 6'
+      }).addTo(farmerGrp);
+
+      // Farmer custom icon
+      const farmerIcon = L.divIcon({
+        className: 'leaflet-farmer-icon',
+        html: `<div style="background:linear-gradient(135deg,#34d399,#059669);width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 15px rgba(16,185,129,0.8);display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);"><span style="position:absolute;top:-20px;background:rgba(2,11,20,0.85);color:#34d399;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;">YOU</span></div>`
+      });
+      L.marker([STATE.farmerLat, STATE.farmerLng], { icon: farmerIcon }).addTo(farmerGrp);
+      farmerMarker = farmerGrp;
+
+      // Draw buyers
+      STATE.filteredBuyers.forEach(b => {
+        const isSelected = STATE.selectedBuyer?.id === b.id;
+        let color = '#2563eb'; let shadow = 'rgba(37,99,235,0.5)';
+        if (b.urgent) { color = '#e53e3e'; shadow = 'rgba(229,62,62,0.7)'; }
+        else if (b.highValue) { color = '#e8a020'; shadow = 'rgba(232,160,32,0.6)'; }
+
+        if (isSelected) { color = '#f5c35a'; shadow = 'rgba(245,195,90,0.8)'; }
+
+        const size = isSelected ? 24 : 16;
+        const border = isSelected ? '2px solid rgba(245,195,90,0.8)' : '2px solid transparent';
+
+        // Line to farmer
+        const lineWeight = isSelected ? 2 : 1;
+        const lineOpacity = isSelected ? 0.8 : 0.4;
+        const line = L.polyline([
+          [STATE.farmerLat, STATE.farmerLng],
+          [b.lat, b.lng]
+        ], {
+          color: isSelected ? '#f5c35a' : '#10b981',
+          weight: lineWeight,
+          opacity: lineOpacity,
+          dashArray: '4, 6'
+        }).addTo(mapInstance);
+        distanceLines.push(line);
+
+        // Distance overlay
+        const mx = (STATE.farmerLat + b.lat) / 2;
+        const my = (STATE.farmerLng + b.lng) / 2;
+        const distIcon = L.divIcon({
+          className: 'dist-label',
+          html: `<div style="background:rgba(2,11,20,0.8);color:#34d399;font-size:10px;padding:1px 4px;border-radius:3px;font-weight:600;">${b.distance.toFixed(1)}km</div>`
+        });
+        distanceLines.push(L.marker([mx, my], { icon: distIcon }).addTo(mapInstance));
+
+        // Buyer Marker
+        const iconHTML = `
+      <div style="background:${color};width:${size}px;height:${size}px;border-radius:50%;border:${border};box-shadow:0 0 15px ${shadow}; position:relative; transform:translate(-50%,-50%); cursor:pointer;">
+        <div style="position:absolute; top:-22px; left:50%; transform:translateX(-50%); background:rgba(2,11,20,0.9); border:1px solid ${isSelected ? '#f5c35a' : 'rgba(16,185,129,0.2)'}; padding:2px 6px; border-radius:4px; color:${isSelected ? '#f5c35a' : '#6ee7b7'}; font-size:10px; font-weight:bold; white-space:nowrap; display:${(isSelected || mapInstance.getZoom() > 12) ? 'block' : 'none'};">
+          ${b.name.split(' ')[0]}
+        </div>
+      </div>
+    `;
+        const buyerIcon = L.divIcon({
+          className: 'leaflet-buyer-icon',
+          html: iconHTML
+        });
+
+        const marker = L.marker([b.lat, b.lng], { icon: buyerIcon }).addTo(mapInstance);
+        marker.on('click', () => selectBuyer(b.id));
+        buyerMarkers.push(marker);
+      });
+    }
+
+    // Map controls
+    function zoomIn() { if (mapInstance) mapInstance.zoomIn(); }
+    function zoomOut() { if (mapInstance) mapInstance.zoomOut(); }
+    function resetView() {
+      if (mapInstance) mapInstance.setView([STATE.farmerLat, STATE.farmerLng], 12);
+      document.getElementById('filter-distance').value = 25;
+      applyFilters();
+    }
+    function centerOnFarmer() {
+      if (mapInstance) mapInstance.setView([STATE.farmerLat, STATE.farmerLng], Math.max(mapInstance.getZoom(), 12));
+      showToast('📍 Centered on your location');
+    }
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      sb.classList.toggle('collapsed');
+      setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(true); }, 300);
+    }
+
+    // ─── BUYER DASHBOARD ──────────────────────────────────────────
+    function toggleBuyerDash() {
+      STATE.buyerDashOpen = !STATE.buyerDashOpen;
+      document.getElementById('buyer-dash').classList.toggle('active', STATE.buyerDashOpen);
+      updateDashStats();
+    }
+
+    function updateDashStats() {
+      document.getElementById('dash-posts').textContent = STATE.postedRequirements.length;
+      document.getElementById('dash-contacts').textContent = STATE.stats.contacts;
+      document.getElementById('dash-saved').textContent = STATE.stats.distanceSaved + ' km';
+      document.getElementById('dash-rating').textContent = STATE.stats.rating || '—';
+    }
+
+    function postRequirement() {
+      const product = document.getElementById('pf-product').value;
+      const qty = document.getElementById('pf-qty').value;
+      const price = document.getElementById('pf-price').value;
+      const phone = document.getElementById('pf-phone').value;
+      const deadline = document.getElementById('pf-deadline').value;
+      const type = document.getElementById('pf-type').value;
+
+      if (!product || !qty || !price || !phone) {
+        showToast('⚠️ Please fill all required fields', 'error'); return;
+      }
+
+      const req = {
+        id: Date.now(), product, qty: parseInt(qty), price: parseInt(price),
+        phone, deadline, type, lat: STATE.farmerLat, lng: STATE.farmerLng,
+        postedAt: new Date().toLocaleTimeString(),
+        posterName: STATE.user.name
+      };
+
+      STATE.postedRequirements.push(req);
+      STATE.stats.contacts++;
+      STATE.stats.distanceSaved += Math.floor(Math.random() * 30 + 10);
+      
+      const dynamicPosts = JSON.parse(localStorage.getItem('agrihelp_dynamic_posts') || '[]');
+      dynamicPosts.push(req);
+      localStorage.setItem('agrihelp_dynamic_posts', JSON.stringify(dynamicPosts));
+
+      // Add to map buyers (simulating real-time posting)
+      const newBuyer = {
+        id: req.id, name: STATE.user.name, emoji: STATE.user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U', type, product, qty: req.qty,
+        price: req.price, lat: req.lat, lng: req.lng, phone,
+        deadline: deadline || 'Open', rating: 4.0, reviews: 0, urgent: false, highValue: req.price > 3000
+      };
+      STATE.buyers.push({ ...newBuyer, distance: 0 });
+
+      renderPostedList();
+      updateDashStats();
+      applyFilters();
+
+      // Clear form
+      ['pf-product', 'pf-qty', 'pf-price', 'pf-phone', 'pf-deadline'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else el.value = '';
+      });
+
+      showToast('✅ Requirement posted! Farmers nearby are being notified.');
+
+      // Notify all farmers (simulated push)
+      addNotification(`🔔 New buyer nearby: ${product} — ₹${parseInt(price).toLocaleString()}/qt`, true);
+    }
+
+    function renderPostedList() {
+      const container = document.getElementById('posted-items-list');
+      if (STATE.postedRequirements.length === 0) {
+        container.innerHTML = '<div style="font-size:.8rem;color:rgba(148,163,184,.3);text-align:center;padding:2rem;">No requirements posted yet</div>';
+        return;
+      }
+      container.innerHTML = STATE.postedRequirements.map(r => `
+    <div class="posted-item">
+      <span class="pi-emoji" style="border:1px solid rgba(16,185,129,.3); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:11px; font-weight:700; color:var(--g300);">REQ</span>
+      <div class="pi-info">
+        <div class="pi-title">${r.product} — ${r.qty} quintals</div>
+        <div class="pi-meta">₹${r.price.toLocaleString()}/qt · ${r.type} · Posted at ${r.postedAt}</div>
+      </div>
+      <span class="pi-badge">Active</span>
+      <button class="pi-del" onclick="deletePost(${r.id})">🗑</button>
+    </div>
+  `).join('');
+    }
+
+    function deletePost(id) {
+      STATE.postedRequirements = STATE.postedRequirements.filter(r => r.id !== id);
+      STATE.buyers = STATE.buyers.filter(b => b.id !== id);
+      renderPostedList(); applyFilters(); updateDashStats();
+      showToast('🗑 Requirement removed');
+    }
+
+    // ─── CHAT ─────────────────────────────────────────────────────
+    function openChat() {
+      if (!STATE.selectedBuyer) return;
+      document.getElementById('chat-modal').classList.add('open');
+      STATE.chatOpen = true;
+      STATE.stats.contacts = Math.max(STATE.stats.contacts, 1) + 1;
+    }
+
+    function openChatForBuyer(id) {
+      selectBuyer(id);
+      setTimeout(() => openChat(), 100);
+    }
+
+    function closeChat() {
+      document.getElementById('chat-modal').classList.remove('open');
+      STATE.chatOpen = false;
+    }
+
+    function chatEnter(e) { if (e.key === 'Enter') sendChatMessage(); }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const msgs = document.getElementById('chat-messages');
+      msgs.innerHTML += `<div class="msg me">${escHtml(text)}</div>`;
+      input.value = '';
+      msgs.scrollTop = msgs.scrollHeight;
+
+      // Simulated reply
+      setTimeout(() => {
+        const replies = [
+          'Yes, we are interested! What is the quality grade?',
+          'Can you deliver within 3 days?',
+          'We can offer ₹200 more for certified organic produce.',
+          'Please send a sample first. We will finalize quantity.',
+          'Our warehouse is ready. When can you deliver?',
+        ];
+        const reply = replies[Math.floor(Math.random() * replies.length)];
+        msgs.innerHTML += `<div class="msg them">${reply}</div>`;
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 1200 + Math.random() * 800);
+    }
+
+    function callBuyer() {
+      if (!STATE.selectedBuyer) return;
+      document.getElementById('call-modal').style.display = 'flex';
+      document.getElementById('call-name').textContent = STATE.selectedBuyer.name;
+      document.getElementById('call-avatar').textContent = STATE.selectedBuyer.emoji;
+      document.getElementById('call-status').textContent = 'Ringing...';
+
+      if (window.callTimeout) clearTimeout(window.callTimeout);
+      window.callTimeout = setTimeout(() => {
+        document.getElementById('call-status').textContent = '00:01 - Connected';
+        document.getElementById('call-avatar').style.animation = 'none';
+      }, 3000);
+    }
+
+    function endCall() {
+      document.getElementById('call-modal').style.display = 'none';
+      if (window.callTimeout) clearTimeout(window.callTimeout);
+      showToast('Call ended.', '');
+    }
+
+    function bookColdStorage() {
+      showToast('✅ Cold storage booking request sent!', 'success');
+    }
+
+    function toggleColdStorage() {
+      const coldDash = document.getElementById('cold-storage-dash');
+      coldDash.classList.toggle('active');
+    }
+
+    function submitFertilizerForm(event) {
+      event.preventDefault();
+      const name = document.getElementById('add-fert-name').value.trim();
+      let img = document.getElementById('add-fert-img').value.trim();
+      const price = document.getElementById('add-fert-price').value.trim();
+      const desc = document.getElementById('add-fert-desc').value.trim();
+
+      if (!name || !price || !desc) {
+        showToast('⚠️ Please fill in product name, price, and description', 'error'); return;
+      }
+
+      if (!img) {
+        // fallback image
+        img = 'https://images.unsplash.com/photo-1592982537447-6f2a6a0a0c8b?auto=format&fit=crop&q=80&w=400';
+      }
+
+      const container = document.getElementById('fert-list-container');
+      const cardHTML = `
+    <div class="buyer-card" style="animation: panelIn 0.3s ease;">
+      <div style="height:140px; border-radius:var(--r-sm); margin-bottom:.8rem; overflow:hidden; border:1px solid rgba(16,185,129,.15);">
+        <img src="${escHtml(img)}" alt="${escHtml(name)}" style="width:100%; height:100%; object-fit:cover;">
+      </div>
+      <div class="bc-head" style="margin-bottom:0.3rem;">
+        <div style="flex:1">
+          <div class="bc-name">${escHtml(name)}</div>
+        </div>
+      </div>
+      <div style="font-size:0.75rem; color:rgba(148,163,184,.6); margin-bottom:0.6rem; min-height: 2.5em;">${escHtml(desc)}</div>
+      <div class="bc-chips">
+        <span class="bc-chip chip-price">₹${Math.floor(price).toLocaleString()}</span>
+      </div>
+      <div class="bc-footer"><button class="bc-action bc-contact" onclick="bookFertilizer()">Order Now</button></div>
+    </div>
+  `;
+      container.insertAdjacentHTML('afterbegin', cardHTML);
+      showToast('✅ Fertilizer product added successfully!', 'success');
+
+      // clear form
+      document.getElementById('add-fert-name').value = '';
+      document.getElementById('add-fert-img').value = '';
+      document.getElementById('add-fert-price').value = '';
+      document.getElementById('add-fert-desc').value = '';
+    }
+
+    function bookFertilizer() {
+      showToast('✅ Fertilizer order placed successfully!', 'success');
+    }
+
+    function toggleFertilizerDash() {
+      const fertDash = document.getElementById('fertilizer-dash');
+      fertDash.classList.toggle('active');
+    }
+
+    // ─── NOTIFICATIONS ────────────────────────────────────────────
+    function seedNotifications() {
+      STATE.notifications = [
+        { text: 'New buyer posted: 500 qt Tomatoes at ₹2,400/qt near you!', time: '2 min ago', unread: true },
+        { text: 'Raj Exports updated price to ₹3,200 for Rice', time: '15 min ago', unread: true },
+        { text: 'Hotel Grand Hyatt needs Potatoes urgently — 80 qt', time: '32 min ago', unread: true },
+      ];
+      renderNotifications();
+    }
+
+    function addNotification(text, unread = true) {
+      STATE.notifications.unshift({ text, time: 'Just now', unread });
+      renderNotifications();
+      const count = STATE.notifications.filter(n => n.unread).length;
+      document.getElementById('notif-count').textContent = count;
+    }
+
+    function renderNotifications() {
+      const list = document.getElementById('notif-list');
+      const count = STATE.notifications.filter(n => n.unread).length;
+      document.getElementById('notif-count').textContent = count;
+
+      list.innerHTML = STATE.notifications.map(n => `
+    <div class="notif-item ${n.unread ? 'unread' : ''}">
+      <span class="notif-icon">🔔</span>
+      <div>
+        <div class="notif-text">${escHtml(n.text)}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+    }
+
+    function toggleNotifications() {
+      STATE.notifOpen = !STATE.notifOpen;
+      document.getElementById('notif-panel').classList.toggle('open', STATE.notifOpen);
+      if (STATE.notifOpen) {
+        STATE.notifications.forEach(n => n.unread = false);
+        document.getElementById('notif-count').textContent = '0';
+      }
+    }
+
+    // ─── RATING SYSTEM ────────────────────────────────────────────
+    function rateBuyer(stars) {
+      document.querySelectorAll('.star').forEach((s, i) => s.classList.toggle('active', i < stars));
+      showToast(`⭐ Rated ${stars} star${stars > 1 ? 's' : ''}! Thank you.`);
+      if (STATE.selectedBuyer) {
+        STATE.selectedBuyer.rating = ((STATE.selectedBuyer.rating * STATE.selectedBuyer.reviews + stars) / (STATE.selectedBuyer.reviews + 1)).toFixed(1);
+        STATE.selectedBuyer.reviews++;
+        STATE.stats.rating = stars;
+      }
+    }
+
+    // ─── REAL-TIME SIMULATION ────────────────────────────────────
+    function startRealTimeSimulation() {
+      // Simulate new buyer appearing every 30 seconds
+      setInterval(() => {
+        const products = ['Rice', 'Wheat', 'Tomatoes', 'Onions', 'Potatoes', 'Soybean'];
+        const types = ['Wholesaler', 'Retailer', 'Exporter', 'Restaurant'];
+        const names = ['Metro Traders', 'Fresh Hub', 'City Mart', 'Farm Direct', 'Green Buyers'];
+        const p = products[Math.floor(Math.random() * products.length)];
+        const qty = Math.floor(Math.random() * 400 + 50);
+        const price = Math.floor(Math.random() * 3000 + 1200);
+        const name = names[Math.floor(Math.random() * names.length)];
+        const latOff = (Math.random() - 0.5) * 0.12;
+        const lngOff = (Math.random() - 0.5) * 0.12;
+
+        const newBuyer = {
+          id: Date.now(), name, emoji: name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+          type: types[Math.floor(Math.random() * types.length)],
+          product: p, qty, price,
+          lat: STATE.farmerLat + latOff, lng: STATE.farmerLng + lngOff,
+          phone: '98' + Math.floor(Math.random() * 1e8).toString().padStart(8, '0'),
+          deadline: '2026-04-30', rating: +(Math.random() * 1.5 + 3.5).toFixed(1), reviews: Math.floor(Math.random() * 20),
+          urgent: Math.random() > 0.75, highValue: price > 3000,
+          distance: 0
+        };
+        newBuyer.distance = haversine(STATE.farmerLat, STATE.farmerLng, newBuyer.lat, newBuyer.lng);
+        STATE.buyers.push(newBuyer);
+
+        addNotification(`🆕 New buyer: ${name} needs ${qty} qt ${p} @ ₹${price.toLocaleString()}/qt`);
+        applyFilters();
+        showToast(`🔔 New buyer posted: ${p} — ${qty} qt`);
+      }, 30000);
+
+      // Animate the Live indicator
+      let liveBlink = true;
+      setInterval(() => {
+        liveBlink = !liveBlink;
+        const el = document.getElementById('stat-live');
+        if (el) el.querySelector('span').textContent = liveBlink ? '🟢 Live' : '🔵 Live';
+      }, 1500);
+    }
+
+    // ─── UTILITIES ────────────────────────────────────────────────
+    function showToast(msg, type = '') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show' + (type ? ' ' + type : '');
+      clearTimeout(t._timeout);
+      t._timeout = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ─── AUTO-LOGIN CHECK ─────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('agrihelp_token');
+      if (token) {
+        try {
+          const data = JSON.parse(atob(token));
+          if (data.exp > Date.now()) {
+            const name = data.email.split('@')[0].replace(/\d/g, '').replace(/^./, c => c.toUpperCase()) || 'User';
+            STATE.user = { name, email: data.email, role: data.role };
+            launchApp();
+            return;
+          }
+        } catch { localStorage.removeItem('agrihelp_token'); }
+      }
+      // Animate map canvas placeholder
+      const canvas = document.getElementById('map');
+      if (!canvas) return;
+    });
+
+    // Polyfill roundRect for older browsers
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+        this.beginPath();
+        this.moveTo(x + r, y);
+        this.lineTo(x + w - r, y);
+        this.quadraticCurveTo(x + w, y, x + w, y + r);
+        this.lineTo(x + w, y + h - r);
+        this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        this.lineTo(x + r, y + h);
+        this.quadraticCurveTo(x, y + h, x, y + h - r);
+        this.lineTo(x, y + r);
+        this.quadraticCurveTo(x, y, x + r, y);
+        this.closePath();
+      };
+    }
+// ─── GLOBE.GL ANIMATION ────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const globeContainer = document.getElementById('globeViz');
+  if (globeContainer) {
+    const globe = Globe()(globeContainer)
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+      .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+      .backgroundColor('rgba(0,0,0,1)')
+      .width(window.innerWidth)
+      .height(window.innerHeight);
+
+    globe.controls().autoRotate = true;
+    globe.controls().autoRotateSpeed = 0.5;
+    globe.controls().enableZoom = false; // Background locked
+    globe.camera().position.z = 250; // Zoom in slightly
+
+    window.addEventListener('resize', () => {
+      globe.width(window.innerWidth);
+      globe.height(window.innerHeight);
+    });
+  }
+});
+
+  </script>
+</body>
+
+</html>
