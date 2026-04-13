@@ -2222,7 +2222,8 @@
     ═══════════════════════════════════════════════════════════════ */
 
     // ─── STATE ───────────────────────────────────────────────────
-    const STATE = {
+    // ⚠️ Use var (not const/let) so the Firebase ES module can access window.STATE
+    var STATE = {
       connectionStatus: {},    // Tracks 'matched' or 'pending' connections
       role: 'farmer',          // 'farmer' | 'buyer'
       user: null,              // logged-in user object
@@ -2243,7 +2244,7 @@
     };
 
     // ─── SEED BUYER DATA ──────────────────────────────────────────
-    const SEED_BUYERS = [
+    var SEED_BUYERS = [  // var → accessible as window.SEED_BUYERS from ES modules
       { id: 1, name: 'Suresh Wholesalers', emoji: 'SW', type: 'Wholesaler', product: 'Tomatoes', qty: 500, price: 2400, lat: 18.5500, lng: 73.8800, phone: '9876543210', deadline: '2026-04-15', rating: 4.5, reviews: 18, urgent: false, highValue: true },
       { id: 2, name: 'Pune Fresh Market', emoji: 'PM', type: 'Retailer', product: 'Onions', qty: 200, price: 1800, lat: 18.4900, lng: 73.8300, phone: '9823456789', deadline: '2026-04-10', rating: 3.8, reviews: 7, urgent: true, highValue: false },
       { id: 3, name: 'Raj Exports Pvt Ltd', emoji: 'RE', type: 'Exporter', product: 'Rice', qty: 1000, price: 3200, lat: 18.5700, lng: 73.9100, phone: '9812345678', deadline: '2026-04-20', rating: 4.2, reviews: 24, urgent: false, highValue: true },
@@ -2274,8 +2275,8 @@
     function toRad(deg) { return deg * (Math.PI / 180); }
 
     // ─── AUTH LOGIC ───────────────────────────────────────────────
-    let currentRole = 'farmer';
-    let currentAuthTab = 'login';
+    var currentRole = 'farmer';      // var → accessible as window.currentRole from ES modules
+    var currentAuthTab = 'login';
 
     function setRole(role) {
       currentRole = role;
@@ -3172,6 +3173,18 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
   </script>
+
+  <!--
+    ═══════════════════════════════════════════════════════
+    🔥 FIREBASE INTEGRATION
+    Uses ES Module CDN — no npm/bundler needed!
+    firebase-app.js overrides: handleLogin, handleSignup,
+    handleLogout, postRequirement, sendChatMessage, rateBuyer,
+    loadBuyersWithDistance, deletePost
+    ═══════════════════════════════════════════════════════
+  -->
+  <script type="module" src="./firebase-app.js"></script>
+
 </body>
 
 </html>
