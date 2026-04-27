@@ -98,7 +98,7 @@
     /* ═══════════════════════════ AUTH CARD ═══════════════════════════ */
     .auth-wrap {
       display: grid;
-      grid-template-columns: 1.1fr 1fr;
+      grid-template-columns: 1fr;
       max-width: 900px;
       width: 95%;
       background: transparent;
@@ -108,7 +108,7 @@
     .auth-brand {
       padding: 3rem;
       background: transparent;
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: center;
       border-right: 1px solid rgba(16, 185, 129, .12);
@@ -485,15 +485,21 @@
 
     /* ── SIDEBAR ── */
     .sidebar {
-      width: 340px;
-      min-width: 300px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 200;
+      transform: translateX(-100%);
+      width: 300px !important;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       background: rgba(2, 11, 20, .97);
       border-right: 1px solid rgba(16, 185, 129, .12);
       overflow: hidden;
       flex-shrink: 0;
-      transition: width .3s ease;
+      transition: transform .3s ease, width .3s ease;
     }
 
     .sidebar.collapsed {
@@ -1067,7 +1073,7 @@
       border: 1px solid rgba(16, 185, 129, .2);
       border-radius: var(--r-lg);
       padding: 1.4rem;
-      grid-column: span 2;
+      grid-column: span 1;
     }
 
     .post-form-card h3 {
@@ -1079,7 +1085,7 @@
 
     .pf-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: .8rem;
     }
 
@@ -1133,7 +1139,7 @@
     }
 
     .posted-list {
-      grid-column: span 2;
+      grid-column: span 1;
     }
 
     .posted-list h3 {
@@ -1564,23 +1570,24 @@
     }
 
     /* RESPONSIVE */
-    @media(max-width:768px) {
+    @media(min-width: 768px) {
       .auth-wrap {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1.1fr 1fr;
       }
 
       .auth-brand {
-        display: none;
+        display: flex;
       }
 
       .sidebar {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        z-index: 200;
-        transform: translateX(-100%);
-        width: 300px !important;
+        position: relative;
+        left: auto;
+        top: auto;
+        bottom: auto;
+        z-index: 10;
+        transform: translateX(0);
+        width: 340px !important;
+        min-width: 300px;
       }
 
       .sidebar.mobile-open {
@@ -1588,18 +1595,18 @@
       }
 
       .sidebar-toggle {
-        display: flex;
+        display: none !important;
       }
 
       .post-form-card {
-        grid-column: span 1;
+        grid-column: span 2;
       }
 
       .posted-list {
-        grid-column: span 1;
+        grid-column: span 2;
       }
 
       .pf-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
       }
     }

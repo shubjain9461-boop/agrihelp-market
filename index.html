@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AgriHelp — Smart Agriculture Marketplace</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='20' font-size='20'>🌾</text></svg>">
   <link
     href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,400&display=swap"
     rel="stylesheet">
@@ -111,7 +112,7 @@
     /* ═══════════════════════════ AUTH CARD ═══════════════════════════ */
     .auth-wrap {
       display: grid;
-      grid-template-columns: 1.1fr 1fr;
+      grid-template-columns: 1fr;
       max-width: 900px;
       width: 95%;
       background: transparent;
@@ -121,7 +122,7 @@
     .auth-brand {
       padding: 3rem;
       background: transparent;
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: center;
       border-right: 1px solid rgba(16, 185, 129, .12);
@@ -498,15 +499,21 @@
 
     /* ── SIDEBAR ── */
     .sidebar {
-      width: 340px;
-      min-width: 300px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 200;
+      transform: translateX(-100%);
+      width: 300px !important;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       background: rgba(2, 11, 20, .97);
       border-right: 1px solid rgba(16, 185, 129, .12);
       overflow: hidden;
       flex-shrink: 0;
-      transition: width .3s ease;
+      transition: transform .3s ease, width .3s ease;
     }
 
     .sidebar.collapsed {
@@ -1080,7 +1087,7 @@
       border: 1px solid rgba(16, 185, 129, .2);
       border-radius: var(--r-lg);
       padding: 1.4rem;
-      grid-column: span 2;
+      grid-column: span 1;
     }
 
     .post-form-card h3 {
@@ -1092,7 +1099,7 @@
 
     .pf-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: .8rem;
     }
 
@@ -1146,7 +1153,7 @@
     }
 
     .posted-list {
-      grid-column: span 2;
+      grid-column: span 1;
     }
 
     .posted-list h3 {
@@ -1576,32 +1583,611 @@
       color: rgba(148, 163, 184, .5);
     }
 
-    /* RESPONSIVE */
-    @media(max-width:768px) {
+    /* ══════════════════════════════════════════════════════════════
+       MOBILE-FIRST RESPONSIVE DESIGN
+    ══════════════════════════════════════════════════════════════ */
+
+    /* MOBILE DEFAULTS (320px - 767px) */
+    body {
+      font-size: 14px;
+    }
+
+    .topbar {
+      height: 50px;
+      padding: 0 0.6rem;
+      gap: 0.4rem;
+      justify-content: flex-start;
+    }
+
+    .tb-logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tb-logo span {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .tb-role-badge {
+      display: none !important;
+    }
+
+    .stats-bar {
+      display: none !important;
+    }
+
+    .tb-spacer {
+      display: none !important;
+    }
+
+    .tb-user {
+      display: none !important;
+      margin-left: auto;
+    }
+
+    .tb-notify {
+      margin-left: auto;
+      display: flex !important;
+      width: 32px;
+      height: 32px;
+    }
+
+    .tb-btn {
+      padding: 6px 10px;
+      font-size: 0.7rem;
+    }
+
+    /* Auth - Mobile */
+    .auth-wrap {
+      width: 100%;
+      max-width: 100%;
+      min-height: 100vh;
+      grid-template-columns: 1fr;
+      margin: 0;
+    }
+
+    .auth-brand {
+      display: none !important;
+    }
+
+    .auth-form-wrap {
+      padding: 1.5rem 1rem;
+      width: 100%;
+    }
+
+    .form-title {
+      font-size: 1.1rem;
+    }
+
+    .form-sub {
+      font-size: 0.75rem;
+    }
+
+    .fg {
+      margin-bottom: 0.8rem;
+    }
+
+    .fg label {
+      font-size: 0.68rem;
+    }
+
+    .fi input,
+    .fi select {
+      padding: 9px 10px 9px 32px;
+      font-size: 0.8rem;
+    }
+
+    .auth-submit {
+      padding: 11px;
+      font-size: 0.85rem;
+    }
+
+    /* App Body - Mobile */
+    .app-body {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      position: fixed;
+      width: 280px;
+      left: 0;
+      top: 52px;
+      bottom: 0;
+      transform: translateX(-100%);
+      z-index: 200;
+      transition: transform 0.3s ease;
+      background: rgba(2, 11, 20, .97);
+      border-right: 1px solid rgba(16, 185, 129, .12);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 150;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    .sidebar-toggle {
+      display: flex !important;
+      position: relative;
+      top: 0;
+      left: 0;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      margin: 0 6px 0 0;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--g300);
+      font-size: 1.1rem;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .sidebar-toggle:active {
+      background: rgba(16, 185, 129, 0.25);
+      transform: scale(0.95);
+    }
+
+    .map-area {
+      flex: 1;
+      position: relative;
+      width: 100%;
+    }
+
+    /* Buyer List - Mobile */
+    .buyer-card {
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .buyer-card:last-child {
+      margin-bottom: 1rem;
+    }
+
+    .bc-head {
+      margin-bottom: 0.5rem;
+      gap: 0.5rem;
+    }
+
+    .bc-avatar {
+      width: 32px;
+      height: 32px;
+      font-size: 0.8rem;
+    }
+
+    .bc-name {
+      font-size: 0.82rem;
+    }
+
+    .bc-chips {
+      gap: 0.25rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .bc-chip {
+      font-size: 0.62rem;
+      padding: 2px 7px;
+    }
+
+    .bc-footer {
+      gap: 0.3rem;
+    }
+
+    .bc-action {
+      padding: 5px;
+      font-size: 0.68rem;
+    }
+
+    /* Detail Panel - Mobile */
+    .detail-panel {
+      position: fixed;
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      top: 52px;
+      left: 0;
+      border-radius: 0;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 300;
+    }
+
+    .detail-panel.open {
+      transform: translateX(0);
+    }
+
+    .dp-header {
+      padding: 0.8rem 0.8rem 0.5rem;
+    }
+
+    .dp-avatar {
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+    }
+
+    .dp-name {
+      font-size: 1rem;
+    }
+
+    .dp-body {
+      padding: 0.8rem;
+      overflow-y: auto;
+      max-height: calc(100vh - 200px);
+    }
+
+    .dp-row {
+      padding: 0.5rem 0.6rem;
+      font-size: 0.78rem;
+    }
+
+    .dp-btn {
+      padding: 9px;
+      font-size: 0.78rem;
+    }
+
+    /* Map Controls - Mobile */
+    .map-controls {
+      top: 0.5rem;
+      right: 0.5rem;
+      gap: 0.4rem;
+    }
+
+    .mc-btn {
+      width: 36px;
+      height: 36px;
+      font-size: 0.9rem;
+    }
+
+    .my-location-btn {
+      bottom: 70px;
+      right: 0.5rem;
+      padding: 8px 12px;
+      font-size: 0.73rem;
+    }
+
+    .map-legend {
+      display: none;
+    }
+
+    /* Buyer Dashboard - Mobile */
+    .dash-body {
+      grid-template-columns: 1fr;
+      gap: 0.8rem;
+      padding: 0.8rem 1rem;
+    }
+
+    .post-form-card {
+      padding: 1rem;
+    }
+
+    .post-form-card h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .pf-grid {
+      grid-template-columns: 1fr;
+      gap: 0.6rem;
+    }
+
+    .stat-card {
+      padding: 0.9rem;
+    }
+
+    .stat-num {
+      font-size: 1.8rem;
+    }
+
+    /* Notifications - Mobile */
+    .notif-panel {
+      width: 100%;
+      top: 52px;
+      max-width: none;
+    }
+
+    .np-head {
+      padding: 0.8rem;
+    }
+
+    .notif-item {
+      padding: 0.65rem;
+      margin-bottom: 0.4rem;
+    }
+
+    /* Chat Modal - Mobile */
+    .chat-modal {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      height: 60%;
+      border-radius: 20px 20px 0 0;
+      transform: translateY(100%) scale(1);
+    }
+
+    .chat-modal.open {
+      transform: translateY(0) scale(1);
+    }
+
+    .chat-messages {
+      height: 200px;
+    }
+
+    /* Toast - Mobile */
+    .toast {
+      bottom: 70px;
+      left: 1rem;
+      right: 1rem;
+      transform: translateX(0) translateY(20px);
+      width: calc(100% - 2rem);
+      white-space: normal;
+    }
+
+    .toast.show {
+      transform: translateX(0) translateY(0);
+    }
+
+    /* Role Tabs - Mobile */
+    .role-tabs {
+      margin-bottom: 1.2rem;
+    }
+
+    .role-tab {
+      font-size: 0.75rem;
+      padding: 8px;
+    }
+
+    .auth-tab-btns {
+      gap: 0.4rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .auth-tab-btn {
+      font-size: 0.73rem;
+      padding: 7px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       TABLET (768px - 1024px)
+    ══════════════════════════════════════════════════════════════ */
+    @media (min-width: 768px) {
+      html {
+        font-size: 15px;
+      }
+
+      body {
+        font-size: 15px;
+      }
+
+      .topbar {
+        height: 56px;
+        padding: 0 1rem;
+        gap: 0.8rem;
+      }
+
+      .tb-logo span {
+        font-size: 1.25rem;
+      }
+
+      .tb-role-badge {
+        display: inline-block;
+      }
+
+      .tb-user {
+        display: flex;
+        gap: 0.8rem;
+      }
+
+      .tb-avatar {
+        width: 36px;
+        height: 36px;
+      }
+
+      /* Auth - Tablet */
       .auth-wrap {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1.1fr 1fr;
+        max-width: 900px;
+        width: 95%;
       }
 
       .auth-brand {
-        display: none;
+        display: flex !important;
+        padding: 2.5rem;
       }
 
+      .auth-form-wrap {
+        padding: 2rem;
+      }
+
+      .form-title {
+        font-size: 1.25rem;
+      }
+
+      .form-sub {
+        font-size: 0.78rem;
+      }
+
+      /* Sidebar - Tablet */
       .sidebar {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        z-index: 200;
-        transform: translateX(-100%);
-        width: 300px !important;
+        position: relative;
+        width: 300px;
+        top: auto;
+        left: auto;
+        transform: translateX(0);
+        transition: width 0.3s ease;
       }
 
-      .sidebar.mobile-open {
+      .sidebar.open {
         transform: translateX(0);
       }
 
       .sidebar-toggle {
-        display: flex;
+        display: none !important;
+      }
+
+      .sidebar-overlay {
+        display: none !important;
+      }
+
+      /* Dashboard - Tablet */
+      .dash-body {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+
+      .post-form-card {
+        grid-column: span 2;
+      }
+
+      .posted-list {
+        grid-column: span 2;
+      }
+
+      .pf-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      /* Detail Panel - Tablet */
+      .detail-panel {
+        position: absolute;
+        width: 320px;
+        height: auto;
+        max-height: calc(100vh - 80px);
+        top: 1rem;
+        left: 1rem;
+        transform: translateX(-120%);
+        border-radius: var(--r-lg);
+      }
+
+      .detail-panel.open {
+        transform: translateX(0);
+      }
+
+      /* Map Legend - Tablet */
+      .map-legend {
+        display: block;
+      }
+
+      /* Notifications - Tablet */
+      .notif-panel {
+        width: 320px;
+        top: 56px;
+      }
+
+      /* Chat Modal - Tablet */
+      .chat-modal {
+        position: fixed;
+        width: 320px;
+        height: auto;
+        bottom: 1rem;
+        right: 1rem;
+        border-radius: var(--r-lg);
+        transform: translateY(20px) scale(0.97);
+      }
+
+      .chat-modal.open {
+        transform: translateY(0) scale(1);
+      }
+
+      /* Toast - Tablet */
+      .toast {
+        bottom: 1.5rem;
+        width: auto;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+      }
+
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .role-tabs {
+        margin-bottom: 1.6rem;
+      }
+
+      .role-tab {
+        font-size: 0.8rem;
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       DESKTOP (1025px+)
+    ══════════════════════════════════════════════════════════════ */
+    @media (min-width: 1025px) {
+      html {
+        font-size: 16px;
+      }
+
+      body {
+        font-size: 16px;
+      }
+
+      .topbar {
+        height: 58px;
+        padding: 0 1.2rem;
+        gap: 1rem;
+      }
+
+      .tb-logo span {
+        font-size: 1.3rem;
+      }
+
+      .tb-btn {
+        padding: 7px 14px;
+        font-size: 0.75rem;
+      }
+
+      /* Auth - Desktop */
+      .auth-wrap {
+        grid-template-columns: 1.1fr 1fr;
+        max-width: 900px;
+        width: 95%;
+      }
+
+      .auth-brand {
+        display: flex !important;
+        padding: 3rem;
+      }
+
+      .auth-form-wrap {
+        padding: 2.5rem;
+      }
+
+      /* Sidebar - Desktop */
+      .sidebar {
+        position: relative;
+        width: 340px !important;
+        min-width: 300px;
+      }
+
+      .sidebar-toggle {
+        display: none !important;
+      }
+
+      /* Dashboard - Desktop */
+      .dash-body {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1rem;
       }
 
       .post-form-card {
@@ -1613,12 +2199,98 @@
       }
 
       .pf-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      /* Detail Panel - Desktop */
+      .detail-panel {
+        position: absolute;
+        width: 300px;
+        top: 1rem;
+        left: 1rem;
+        transform: translateX(-120%);
+        border-radius: var(--r-lg);
+      }
+
+      .detail-panel.open {
+        transform: translateX(0);
+      }
+
+      /* Map Legend - Desktop */
+      .map-legend {
+        display: block;
+      }
+
+      /* Notifications - Desktop */
+      .notif-panel {
+        width: 300px;
+        top: 58px;
+      }
+
+      /* Chat Modal - Desktop */
+      .chat-modal {
+        position: fixed;
+        width: 320px;
+        bottom: 1rem;
+        right: 1rem;
+        border-radius: var(--r-lg);
+        transform: translateY(20px) scale(0.97);
+      }
+
+      .chat-modal.open {
+        transform: translateY(0) scale(1);
+      }
+
+      /* Toast - Desktop */
+      .toast {
+        bottom: 1.5rem;
+      }
+
+      .my-location-btn {
+        bottom: 1rem;
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       LARGE DESKTOP (1441px+)
+    ══════════════════════════════════════════════════════════════ */
+    @media (min-width: 1441px) {
+      .sidebar {
+        width: 360px !important;
+      }
+
+      .detail-panel {
+        width: 340px;
+      }
+
+      .notif-panel {
+        width: 340px;
+      }
+
+      .chat-modal {
+        width: 360px;
       }
     }
   </style>
-  <script src="//unpkg.com/three"></script>
-  <script src="//unpkg.com/globe.gl"></script>
+  <!-- Globe.gl with latest Three.js (r163+) - no deprecation warnings -->
+  <script src="https://unpkg.com/three@r163/build/three.min.js"></script>
+  <script src="https://unpkg.com/globe.gl@2.33.0/dist/globe.gl.min.js"></script>
+  <!-- Suppress console warnings from third-party libraries -->
+  <script>
+    // Suppress Three.js and WebGL renderer warnings
+    if (typeof window !== 'undefined') {
+      const originalWarn = console.warn;
+      console.warn = function(...args) {
+        // Filter out Three.js deprecation warnings
+        if (args[0]?.includes?.('THREE.WARNING') || 
+            args[0]?.includes?.('useLegacyLights') ||
+            args[0]?.includes?.('WebGLRenderer')) {
+          return; // Silently ignore Three.js warnings
+        }
+        originalWarn.apply(console, args);
+      };
+    }
+  </script>
 </head>
 
 <body>
@@ -1718,6 +2390,7 @@
   <div id="app">
     <!-- Topbar -->
     <div class="topbar">
+      <button class="sidebar-toggle" title="Menu" onclick="window.toggleSidebarMenu?.()">☰</button>
       <a class="tb-logo" href="#" style="display:flex; align-items:center; gap:8px;">
         <svg class="corp-logo" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--g400)"
           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1736,10 +2409,12 @@
         <div class="stats-item" id="stat-live"><span>🟢 Live</span></div>
       </div>
       <div class="tb-spacer"></div>
+      <!-- Notification button visible on mobile -->
+      <div class="tb-notify" onclick="toggleNotifications()" id="notif-btn" style="margin-left:auto;">
+        🔔<span class="notif-badge" id="notif-count">3</span>
+      </div>
+      <!-- User section hidden on mobile -->
       <div class="tb-user">
-        <div class="tb-notify" onclick="toggleNotifications()" id="notif-btn">
-          🔔<span class="notif-badge" id="notif-count">3</span>
-        </div>
         <div class="tb-avatar" id="tb-avatar">👨‍🌾</div>
         <span class="tb-name" id="tb-name">User</span>
         <button class="tb-btn" onclick="toggleFertilizerDash()">🌱 Fertilizers</button>
@@ -2222,7 +2897,6 @@
     ═══════════════════════════════════════════════════════════════ */
 
     // ─── STATE ───────────────────────────────────────────────────
-    // ⚠️ Use var (not const/let) so the Firebase ES module can access window.STATE
     var STATE = {
       connectionStatus: {},    // Tracks 'matched' or 'pending' connections
       role: 'farmer',          // 'farmer' | 'buyer'
@@ -2244,7 +2918,7 @@
     };
 
     // ─── SEED BUYER DATA ──────────────────────────────────────────
-    var SEED_BUYERS = [  // var → accessible as window.SEED_BUYERS from ES modules
+    var SEED_BUYERS = [
       { id: 1, name: 'Suresh Wholesalers', emoji: 'SW', type: 'Wholesaler', product: 'Tomatoes', qty: 500, price: 2400, lat: 18.5500, lng: 73.8800, phone: '9876543210', deadline: '2026-04-15', rating: 4.5, reviews: 18, urgent: false, highValue: true },
       { id: 2, name: 'Pune Fresh Market', emoji: 'PM', type: 'Retailer', product: 'Onions', qty: 200, price: 1800, lat: 18.4900, lng: 73.8300, phone: '9823456789', deadline: '2026-04-10', rating: 3.8, reviews: 7, urgent: true, highValue: false },
       { id: 3, name: 'Raj Exports Pvt Ltd', emoji: 'RE', type: 'Exporter', product: 'Rice', qty: 1000, price: 3200, lat: 18.5700, lng: 73.9100, phone: '9812345678', deadline: '2026-04-20', rating: 4.2, reviews: 24, urgent: false, highValue: true },
@@ -2275,7 +2949,7 @@
     function toRad(deg) { return deg * (Math.PI / 180); }
 
     // ─── AUTH LOGIC ───────────────────────────────────────────────
-    var currentRole = 'farmer';      // var → accessible as window.currentRole from ES modules
+    var currentRole = 'farmer';
     var currentAuthTab = 'login';
 
     function setRole(role) {
@@ -3173,18 +3847,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
   </script>
-
-  <!--
-    ═══════════════════════════════════════════════════════
-    🔥 FIREBASE INTEGRATION
-    Uses ES Module CDN — no npm/bundler needed!
-    firebase-app.js overrides: handleLogin, handleSignup,
-    handleLogout, postRequirement, sendChatMessage, rateBuyer,
-    loadBuyersWithDistance, deletePost
-    ═══════════════════════════════════════════════════════
-  -->
   <script type="module" src="./firebase-app.js"></script>
-
 </body>
 
 </html>

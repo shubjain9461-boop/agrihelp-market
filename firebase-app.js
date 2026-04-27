@@ -29,6 +29,12 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// ─── Silent Error Handler (No console spam) ──
+const handleError = (context, err) => {
+  // Errors are silently handled - only log in development if needed
+  // console.error(`${context}:`, err);
+};
+
 // ─── Shorthand helpers (use window.* so we share inline STATE) ──
 const S     = () => window.STATE;          // the shared global state
 const toast = (m, t) => window.showToast?.(m, t);
@@ -81,7 +87,7 @@ window.handleSignup = async function () {
     toast('✅ Account created!', 'success');
     window.launchApp?.();
   } catch (err) {
-    console.error('Signup error:', err);
+    handleError('Signup error', err);
     const msgs = {
       'auth/email-already-in-use': '⚠️ Email already registered. Try logging in.',
       'auth/weak-password':        '⚠️ Password too weak. Use 6+ characters.',
@@ -134,7 +140,7 @@ window.handleLogin = async function () {
     toast('✅ Welcome back!', 'success');
     window.launchApp?.();
   } catch (err) {
-    console.error('Login error:', err);
+    handleError('Login error', err);
     const msgs = {
       'auth/user-not-found':     '⚠️ No account found. Please sign up first.',
       'auth/wrong-password':     '⚠️ Incorrect password.',
@@ -173,7 +179,7 @@ onAuthStateChanged(auth, async (firebaseUser) => {
         window.launchApp?.();
       }
     } catch (err) {
-      console.error('Auto-login error:', err);
+      handleError('Auto-login error', err);
     }
   }
 });
@@ -228,7 +234,7 @@ function startFirestoreListener() {
 
     window.applyFilters?.();
   }, (err) => {
-    console.error('Firestore listener error:', err);
+    handleError('Firestore listener error', err);
     toast('⚠️ Real-time sync error', 'error');
   });
 }
@@ -244,7 +250,7 @@ window.loadBuyersWithDistance = function () {
   }));
   window.applyFilters?.();
   try { startFirestoreListener(); }
-  catch (err) { console.error('Firestore connect error:', err); }
+  catch (err) { handleError('Firestore connect error', err); }
 };
 
 /* ════════════════════════════════════════════════════════════════
@@ -304,7 +310,7 @@ window.postRequirement = async function () {
     toast('✅ Requirement posted & saved to Firebase!', 'success');
     window.addNotification?.(`🔔 New buyer: ${product} — ₹${parseInt(price).toLocaleString()}/qt`, true);
   } catch (err) {
-    console.error('Post requirement error:', err);
+    handleError('Post requirement error', err);
     toast('❌ Failed to post: ' + err.message, 'error');
   }
 };
@@ -325,7 +331,7 @@ window.deletePost = async function (id) {
     window.updateDashStats?.();
     toast('🗑 Requirement removed');
   } catch (err) {
-    console.error('Delete error:', err);
+    handleError('Delete error', err);
     toast('❌ Failed to delete: ' + err.message, 'error');
   }
 };
@@ -354,7 +360,7 @@ window.sendChatMessage = async function () {
         read:        false
       });
     }
-  } catch (err) { console.error('Message save error:', err); }
+  } catch (err) { handleError('Message save error', err); }
 
   // Auto-reply simulation (keeps existing UX)
   setTimeout(() => {
@@ -392,7 +398,7 @@ window.rateBuyer = async function (stars) {
       b.rating = +((b.rating * b.reviews + stars) / (b.reviews + 1)).toFixed(1);
       b.reviews++;
       S().stats.rating = stars;
-    } catch (err) { console.error('Rating save error:', err); }
+    } catch (err) { handleError('Rating save error', err); }
   }
 };
 
@@ -404,5 +410,3 @@ function haversine(lat1, lon1, lat2, lon2) {
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-
-console.log('🔥 Firebase module loaded — Auth + Firestore active');

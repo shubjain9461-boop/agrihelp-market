@@ -902,6 +902,137 @@
       if (!canvas) return;
     });
 
+    // ─── MOBILE-FIRST RESPONSIVE HANDLERS ──────────────────────────
+    
+    // Global sidebar toggle function
+    window.toggleSidebarMenu = function() {
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      
+      if (sidebar) {
+        sidebar.classList.toggle('open');
+      }
+      
+      if (sidebarOverlay) {
+        sidebarOverlay.classList.toggle('active');
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const isMobile = window.innerWidth < 768;
+      const isTablet = window.innerWidth >= 768 && window.innerWidth < 1025;
+
+      // Create sidebar overlay for mobile
+      if (isMobile && !document.getElementById('sidebar-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.id = 'sidebar-overlay';
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+      }
+
+      // Get elements
+      const sidebarToggle = document.querySelector('.sidebar-toggle');
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+      // ─── ATTACH CLICK HANDLER TO TOGGLE BUTTON ───
+      if (sidebarToggle && sidebar) {
+        sidebarToggle.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.toggleSidebarMenu();
+        };
+      }
+
+      // Close sidebar when clicking overlay
+      if (sidebarOverlay && sidebar) {
+        sidebarOverlay.onclick = function(e) {
+          e.preventDefault();
+          sidebar.classList.remove('open');
+          sidebarOverlay.classList.remove('active');
+        };
+      }
+
+      // Close sidebar when clicking buyer card on mobile
+      document.querySelectorAll('.buyer-card').forEach(card => {
+        card.addEventListener('click', () => {
+          if (isMobile && sidebar) {
+            sidebar.classList.remove('open');
+            if (sidebarOverlay) {
+              sidebarOverlay.classList.remove('active');
+            }
+          }
+        });
+      });
+
+      // Close detail panel when clicking close button on mobile
+      const detailClose = document.querySelector('.dp-close');
+      if (detailClose) {
+        detailClose.addEventListener('click', () => {
+          const detailPanel = document.getElementById('detail-panel');
+          if (detailPanel) {
+            detailPanel.classList.remove('open');
+          }
+        });
+      }
+
+      // Close chat modal on mobile when clicking close button
+      const chatClose = document.querySelector('.chat-close-btn');
+      if (chatClose) {
+        chatClose.addEventListener('click', () => {
+          const chatModal = document.getElementById('chat-modal');
+          if (chatModal) {
+            chatModal.classList.remove('open');
+          }
+        });
+      }
+
+      // Close notifications panel on mobile when clicking close button
+      const notifClose = document.querySelector('.np-close');
+      if (notifClose) {
+        notifClose.addEventListener('click', () => {
+          const notifPanel = document.getElementById('notif-panel');
+          if (notifPanel) {
+            notifPanel.classList.remove('open');
+          }
+        });
+      }
+
+      // Handle window resize for responsive layout changes
+      window.addEventListener('resize', () => {
+        const newWidth = window.innerWidth;
+        const newIsMobile = newWidth < 768;
+        
+        // Auto-close mobile overlays when resizing to desktop
+        if (!newIsMobile && isMobile) {
+          sidebar?.classList.remove('open');
+          sidebarOverlay?.classList.remove('active');
+          document.getElementById('detail-panel')?.classList.remove('open');
+          document.getElementById('chat-modal')?.classList.remove('open');
+          document.getElementById('notif-panel')?.classList.remove('open');
+        }
+      });
+
+      // Prevent scroll lock on mobile when panels are open
+      const updateBodyScroll = () => {
+        const hasOpenPanel = 
+          sidebar?.classList.contains('open') ||
+          document.getElementById('detail-panel')?.classList.contains('open') ||
+          document.getElementById('chat-modal')?.classList.contains('open') ||
+          document.getElementById('notif-panel')?.classList.contains('open');
+
+        if (isMobile && hasOpenPanel) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = '';
+        }
+      };
+
+      // Watch for panel open/close
+      const observer = new MutationObserver(updateBodyScroll);
+      observer.observe(sidebar || document.body, { attributes: true, subtree: true });
+    });
+
     // Polyfill roundRect for older browsers
     if (!CanvasRenderingContext2D.prototype.roundRect) {
       CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
